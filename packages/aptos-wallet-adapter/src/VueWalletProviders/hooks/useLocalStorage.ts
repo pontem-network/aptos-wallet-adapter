@@ -7,7 +7,7 @@ export const useLocalStorage = () => {
     key: string,
     defaultState: T,
     session?: boolean
-  ): [T, (T: any) => void] => {
+  ): [() => any, (newState: any) => void] => {
     let storage: undefined | Storage;
     if (isClient) {
       storage = session ? sessionStorage : localStorage;
@@ -35,7 +35,7 @@ export const useLocalStorage = () => {
       }
     };
 
-    return [state, setLocalStorageState];
+    return [state.value, setLocalStorageState];
   };
 
   return { useLocalStorageState };
