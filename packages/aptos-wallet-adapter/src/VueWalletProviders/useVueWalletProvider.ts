@@ -31,7 +31,6 @@ export const useWalletProviderStore = ({
     const adapter = ref<WalletAdapter | null>(null);
     const account = ref<AccountKeys | null>(null);
     const connected = ref<boolean>(false);
-    const readyState = adapter.value?.readyState || WalletReadyState.Unsupported;
     const connecting = ref<boolean>(false);
     const disconnecting = ref<boolean>(false);
     const isUnloading = ref<boolean>(false);
