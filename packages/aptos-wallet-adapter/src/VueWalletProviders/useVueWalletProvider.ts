@@ -1,15 +1,15 @@
-import { ref, watch, readonly } from 'vue';
-import { defineStore, createPinia } from 'pinia';
+import { readonly, ref, watch } from 'vue';
+import { createPinia, defineStore } from 'pinia';
 import {
-  WalletError,
   Wallet,
-  WalletNotSelectedError,
+  WalletError,
+  WalletNotConnectedError,
   WalletNotReadyError,
-  WalletNotConnectedError
+  WalletNotSelectedError
 } from '../WalletProviders';
 import { AccountKeys, WalletAdapter, WalletName, WalletReadyState } from '../WalletAdapters';
 import { useLocalStorage } from './hooks/useLocalStorage';
-import { TransactionPayload } from 'aptos/dist/generated';
+import { TransactionPayload } from 'aptos/src/generated';
 
 interface IUseVueWalletProvider {
   wallets: WalletAdapter[];
@@ -17,7 +17,12 @@ interface IUseVueWalletProvider {
   localStorageKey?: string;
 }
 
-let initData: IUseVueWalletProvider;
+let initData: IUseVueWalletProvider = {
+  wallets: [],
+  onError: undefined,
+  localStorageKey: undefined,
+};
+
 
 export const createWalletProviderStore = (initStoreData: IUseVueWalletProvider) => {
   initData = { ...initStoreData };
@@ -25,8 +30,11 @@ export const createWalletProviderStore = (initStoreData: IUseVueWalletProvider) 
 };
 
 export const useWalletProviderStore = defineStore('walletProviderStore', () => {
-  const { wallets: adapters, onError, localStorageKey = 'storageKey' } = initData;
-  const { useLocalStorageState } = useLocalStorage();
+  const { onError, localStorageKey = 'storageKey' } = initData;
+  const adapters = ref<WalletAdapter[]>(initData.wallets);
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const useLocalStorageState = useLocalStorage();
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   const [, setWalletName] = useLocalStorageState<WalletName | null>(localStorageKey, null);
   const wallet = ref<Wallet | null>(null);
   const adapter = ref<WalletAdapter | null>(null);
@@ -37,14 +45,12 @@ export const useWalletProviderStore = defineStore('walletProviderStore', () => {
   const isUnloading = ref<boolean>(false);
 
   // Wrap adapters to conform to the `Wallet` interface
-  const wallets = ref<Wallet[]>(
-    adapters.map((adpt) => ({
+  const wallets = ref(adapters.value.map((adpt) => ({
       adapter: adpt,
       readyState: adpt.readyState
     }))
   );
 
-  // Set default state then necessary
   function setDefaultState() {
     wallet.value = null;
     adapter.value = null;
@@ -62,12 +68,12 @@ export const useWalletProviderStore = defineStore('walletProviderStore', () => {
         return prevWallet;
       });
     }
-    for (const wAdapter of adapters) {
+    for (const wAdapter of adapters.value) {
       wAdapter.on('readyStateChange', handleReadyStateChange, wAdapter);
     }
     // When adapters dependency changed - cleanUp function runs before body of watcher;
     onCleanup(() => {
-      for (const wAdapter of adapters) {
+      for (const wAdapter of adapters.value) {
         wAdapter.off('readyStateChange', handleReadyStateChange, wAdapter);
       }
     });

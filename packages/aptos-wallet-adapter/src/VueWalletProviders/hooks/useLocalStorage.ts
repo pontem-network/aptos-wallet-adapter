@@ -1,9 +1,9 @@
-import { ref } from 'vue';
-import { useSSR } from './useSSR';
+import {ref} from 'vue';
+import {useSSR} from './useSSR';
 
 export const useLocalStorage = () => {
   const { isClient } = useSSR();
-  const useLocalStorageState = <T>(
+  return <T>(
     key: string,
     defaultState: T,
     session?: boolean
@@ -38,6 +38,4 @@ export const useLocalStorage = () => {
 
     return [state.value, setLocalStorageState];
   };
-
-  return { useLocalStorageState };
 };
