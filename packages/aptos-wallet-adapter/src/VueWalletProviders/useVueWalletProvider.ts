@@ -1,5 +1,5 @@
 import { ref, watch, readonly } from 'vue';
-import { defineStore } from 'pinia';
+import { defineStore, createPinia } from 'pinia';
 import {
   WalletError,
   Wallet,
@@ -17,190 +17,173 @@ interface IUseVueWalletProvider {
   localStorageKey?: string;
 }
 
-export const useWalletProviderStore = ({
-  wallets: adapters,
-  onError,
-  localStorageKey = 'walletName'
-}: IUseVueWalletProvider) =>
-  defineStore('walletProviderStore', () => {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const { useLocalStorageState } = useLocalStorage();
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const [, setWalletName] = useLocalStorageState<WalletName | null>(localStorageKey, null);
-    const wallet = ref<Wallet | null>(null);
-    const adapter = ref<WalletAdapter | null>(null);
-    const account = ref<AccountKeys | null>(null);
-    const connected = ref<boolean>(false);
-    const connecting = ref<boolean>(false);
-    const disconnecting = ref<boolean>(false);
-    const isUnloading = ref<boolean>(false);
+let initData: IUseVueWalletProvider;
 
-    // Wrap adapters to conform to the `Wallet` interface
-    const wallets = ref<Wallet[]>(
-      adapters.map((adpt) => ({
-        adapter: adpt,
-        readyState: adpt.readyState
-      }))
-    );
+export const createWalletProviderStore = (initStoreData: IUseVueWalletProvider) => {
+  initData = { ...initStoreData };
+  return createPinia();
+};
 
-    function setDefaultState() {
-      wallet.value = null;
-      adapter.value = null;
-      account.value = null;
-      connected.value = false;
-    }
+export const useWalletProviderStore = defineStore('walletProviderStore', () => {
+  const { wallets: adapters, onError, localStorageKey = 'storageKey' } = initData;
+  const { useLocalStorageState } = useLocalStorage();
+  const [, setWalletName] = useLocalStorageState<WalletName | null>(localStorageKey, null);
+  const wallet = ref<Wallet | null>(null);
+  const adapter = ref<WalletAdapter | null>(null);
+  const account = ref<AccountKeys | null>(null);
+  const connected = ref<boolean>(false);
+  const connecting = ref<boolean>(false);
+  const disconnecting = ref<boolean>(false);
+  const isUnloading = ref<boolean>(false);
 
-    // When the wallets change, start to listen for changes to their `readyState`
-    watch(adapters, (_value, _oldValue, onCleanup) => {
-      function handleReadyStateChange(this: WalletAdapter, isReadyState: WalletReadyState) {
-        wallets.value = wallets.value.map((prevWallet) => {
-          if (prevWallet.adapter.name === this.name) {
-            return { ...prevWallet, isReadyState };
-          }
-          return prevWallet;
-        });
-      }
-      for (const wAdapter of adapters) {
-        wAdapter.on('readyStateChange', handleReadyStateChange, wAdapter);
-      }
-      // When adapters dependency changed - cleanUp function runs before body of watcher;
-      onCleanup(() => {
-        for (const wAdapter of adapters) {
-          wAdapter.off('readyStateChange', handleReadyStateChange, wAdapter);
+  // Wrap adapters to conform to the `Wallet` interface
+  const wallets = ref<Wallet[]>(
+    adapters.map((adpt) => ({
+      adapter: adpt,
+      readyState: adpt.readyState
+    }))
+  );
+
+  // Set default state then necessary
+  function setDefaultState() {
+    wallet.value = null;
+    adapter.value = null;
+    account.value = null;
+    connected.value = false;
+  }
+
+  // When the wallets change, start to listen >for changes to their `readyState`
+  watch(adapters, (_value, _oldValue, onCleanup) => {
+    function handleReadyStateChange(this: WalletAdapter, isReadyState: WalletReadyState) {
+      wallets.value = wallets.value.map((prevWallet) => {
+        if (prevWallet.adapter.name === this.name) {
+          return { ...prevWallet, isReadyState };
         }
+        return prevWallet;
       });
-    });
-
-    //Handle the adapter's connect event
-    function handleConnect() {
-      if (!adapter.value) return;
-      connected.value = adapter.value.connected;
-      account.value = adapter.value.publicAccount;
     }
+    for (const wAdapter of adapters) {
+      wAdapter.on('readyStateChange', handleReadyStateChange, wAdapter);
+    }
+    // When adapters dependency changed - cleanUp function runs before body of watcher;
+    onCleanup(() => {
+      for (const wAdapter of adapters) {
+        wAdapter.off('readyStateChange', handleReadyStateChange, wAdapter);
+      }
+    });
+  });
 
-    // Handle the adapter's disconnect event
-    function handleDisconnect() {
-      if (!isUnloading.value) setWalletName(null);
+  //Handle the adapter's connect event
+  function handleConnect() {
+    if (!adapter.value) return;
+    connected.value = adapter.value.connected;
+    account.value = adapter.value.publicAccount;
+  }
+
+  // Handle the adapter's disconnect event
+  function handleDisconnect() {
+    if (!isUnloading.value) setWalletName(null);
+    setDefaultState();
+  }
+
+  // Handle the adapter's error event, and local errors
+  function handleError(error: WalletError) {
+    if (!isUnloading.value) (onError || console.error)(error);
+    return error;
+  }
+
+  // When the adapter changes, disconnect the old one
+  watch(adapter, (_oldValue, _newValue, onCleanup) => {
+    onCleanup(() => {
+      if (adapter.value) adapter.value.disconnect();
+    });
+  });
+
+  async function connect(walletName: string) {
+    if (connecting.value || disconnecting.value || connected.value) return;
+    const selectedWallet = wallets.value.find((wAdapter) => wAdapter.adapter.name === walletName);
+
+    if (selectedWallet) {
+      wallet.value = selectedWallet;
+      adapter.value = selectedWallet.adapter;
+      connected.value = selectedWallet.adapter.connected;
+      account.value = selectedWallet.adapter.publicAccount;
+    } else {
       setDefaultState();
     }
 
-    // Handle the adapter's error event, and local errors
-    function handleError(error: WalletError) {
-      if (!isUnloading.value) (onError || console.error)(error);
-      return error;
-    }
+    if (!selectedWallet?.adapter) throw handleError(new WalletNotSelectedError());
 
-    // Setup and teardown event listeners when the adapter changes
-    watch(
-      [adapter, handleError, handleConnect, handleDisconnect],
-      (_oldValue, _newValue, onCleanup) => {
-        if (adapter.value) {
-          adapter.value.on('connect', handleConnect);
-          adapter.value.on('disconnect', handleDisconnect);
-          adapter.value.on('error', handleError);
-        }
-        // When adapters dependency changed - cleanUp function runs before body of watcher;
-        onCleanup(() => {
-          if (adapter.value) {
-            adapter.value.off('connect', handleConnect);
-            adapter.value.off('disconnect', handleDisconnect);
-            adapter.value.off('error', handleError);
-          }
-        });
-      }
-    );
-
-    // When the adapter changes, disconnect the old one
-    watch(adapter, (_oldValue, _newValue, onCleanup) => {
-      onCleanup(() => {
-        if (adapter.value) adapter.value.disconnect();
-      });
-    });
-
-    async function connect(walleName: string) {
-      if (connecting.value || disconnecting.value || connected.value) return;
-      const selectedWallet = wallets.value.find((wAdapter) => wAdapter.adapter.name === walleName);
-
-      if (selectedWallet) {
-        wallet.value = selectedWallet;
-        adapter.value = selectedWallet.adapter;
-        connected.value = selectedWallet.adapter.connected;
-        account.value = selectedWallet.adapter.publicAccount;
-      } else {
-        setDefaultState();
+    if (
+      !(
+        selectedWallet.adapter.readyState === WalletReadyState.Installed ||
+        selectedWallet.adapter.readyState === WalletReadyState.Loadable
+      )
+    ) {
+      // Clear the selected wallet
+      setWalletName(null);
+      if (typeof window !== 'undefined' && selectedWallet.adapter.url) {
+        window.open(selectedWallet.adapter.url, '_blank');
       }
 
-      if (!selectedWallet?.adapter) throw handleError(new WalletNotSelectedError());
-
-      if (
-        !(
-          selectedWallet.adapter.readyState === WalletReadyState.Installed ||
-          selectedWallet.adapter.readyState === WalletReadyState.Loadable
-        )
-      ) {
-        // Clear the selected wallet
-        setWalletName(null);
-        if (typeof window !== 'undefined' && selectedWallet.adapter.url) {
-          window.open(selectedWallet.adapter.url, '_blank');
-        }
-
-        throw handleError(new WalletNotReadyError());
-      }
-
-      connecting.value = true;
-      try {
-        await selectedWallet.adapter.connect();
-      } catch (error: any) {
-        // Clear the selected wallet
-        setWalletName(null);
-        // Rethrow the error, and handleError will also be called
-        throw error;
-      } finally {
-        connecting.value = false;
-      }
+      throw handleError(new WalletNotReadyError());
     }
 
-    async function disconnect() {
-      if (disconnecting.value) return;
-      if (!adapter.value) return setWalletName(null);
-
-      disconnecting.value = true;
-      try {
-        await adapter.value.disconnect();
-      } catch (error: any) {
-        // Clear the selected wallet
-        setWalletName(null);
-        // Rethrow the error, and handleError will also be called
-        throw error;
-      } finally {
-        disconnecting.value = false;
-      }
+    connecting.value = true;
+    try {
+      await selectedWallet.adapter.connect();
+    } catch (error: any) {
+      // Clear the selected wallet
+      setWalletName(null);
+      // Rethrow the error, and handleError will also be called
+      throw error;
+    } finally {
+      connecting.value = false;
+      handleConnect();
     }
+  }
 
-    async function signAndSubmitTransaction(transaction: TransactionPayload) {
-      if (!adapter.value) throw handleError(new WalletNotSelectedError());
-      if (!connected.value) throw handleError(new WalletNotConnectedError());
-      const response = await adapter.value.signAndSubmitTransaction(transaction);
-      return response;
+  async function disconnect() {
+    if (disconnecting.value) return;
+    if (!adapter.value) return setWalletName(null);
+
+    disconnecting.value = true;
+    try {
+      await adapter.value.disconnect();
+    } catch (error: any) {
+      // Clear the selected wallet
+      setWalletName(null);
+      // Rethrow the error, and handleError will also be called
+      throw error;
+    } finally {
+      disconnecting.value = false;
+      handleDisconnect();
     }
+  }
 
-    async function signTransaction(transaction: TransactionPayload) {
-      if (!adapter.value) throw handleError(new WalletNotSelectedError());
-      if (!connected.value) throw handleError(new WalletNotConnectedError());
-      return adapter.value.signTransaction(transaction);
-    }
+  async function signAndSubmitTransaction(transaction: TransactionPayload) {
+    if (!adapter.value) throw handleError(new WalletNotSelectedError());
+    if (!connected.value) throw handleError(new WalletNotConnectedError());
+    return await adapter.value.signAndSubmitTransaction(transaction);
+  }
 
-    return {
-      wallets,
-      wallet,
-      account,
-      connected,
-      connecting: readonly(connecting),
-      disconnecting: readonly(disconnecting),
-      select: setWalletName,
-      connect,
-      disconnect,
-      signAndSubmitTransaction,
-      signTransaction
-    };
-  });
+  async function signTransaction(transaction: TransactionPayload) {
+    if (!adapter.value) throw handleError(new WalletNotSelectedError());
+    if (!connected.value) throw handleError(new WalletNotConnectedError());
+    return await adapter.value.signTransaction(transaction);
+  }
+
+  return {
+    wallets,
+    wallet,
+    account,
+    connected,
+    connecting: readonly(connecting),
+    disconnecting: readonly(disconnecting),
+    select: setWalletName,
+    connect,
+    disconnect,
+    signAndSubmitTransaction,
+    signTransaction
+  };
+});

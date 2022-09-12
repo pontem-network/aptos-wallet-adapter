@@ -28,6 +28,7 @@ export const useLocalStorage = () => {
 
     const setLocalStorageState = (newState: any) => {
       state.value = newState;
+
       if (newState === null) {
         storage?.removeItem(key);
       } else {

@@ -1,1 +1,1 @@
-export { useWalletProviderStore } from './useVueWalletProvider';
+export { useWalletProviderStore, createWalletProviderStore } from './useVueWalletProvider';
