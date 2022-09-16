@@ -288,6 +288,7 @@ export const WalletProvider: FC<WalletProviderProps> = ({
   );
 
   return (
+    // @ts-ignore
     <WalletContext.Provider
       value={{
         wallets,

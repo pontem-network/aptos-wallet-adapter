@@ -1,5 +1,5 @@
-import {ref} from 'vue';
-import {useSSR} from './useSSR';
+import { ref } from 'vue';
+import { useSSR } from './useSSR';
 
 export const useLocalStorage = () => {
   const { isClient } = useSSR();
@@ -7,7 +7,7 @@ export const useLocalStorage = () => {
     key: string,
     defaultState: T,
     session?: boolean
-  ): [() => any, (newState: any) => void] => {
+  ): ((() => any) | ((newState: any) => void))[] => {
     let storage: undefined | Storage;
     if (isClient) {
       storage = session ? sessionStorage : localStorage;
