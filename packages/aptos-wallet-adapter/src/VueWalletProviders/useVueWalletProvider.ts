@@ -103,13 +103,6 @@ export const useWalletProviderStore = defineStore('walletProviderStore', () => {
     return error;
   }
 
-  // When the adapter changes, disconnect the old one
-  watch(adapter, (_oldValue, _newValue, onCleanup) => {
-    onCleanup(() => {
-      if (adapter.value) adapter.value.disconnect();
-    });
-  });
-
   async function connect(walletName: string) {
     if (connecting.value || disconnecting.value || connected.value) return;
     const selectedWallet = wallets.value.find((wAdapter) => wAdapter.adapter.name === walletName);
@@ -175,6 +168,27 @@ export const useWalletProviderStore = defineStore('walletProviderStore', () => {
       handleDisconnect();
     }
   }
+
+  // If autoConnect is enabled, try to connect when the adapter changes and is ready
+  watch(adapter, async (_oldValue, _newValue, onCleanup) => {
+    if (
+      connecting.value ||
+      connected.value ||
+      !autoConnect.value ||
+      !adapter.value ||
+      !(
+        adapter.value.readyState === WalletReadyState.Installed ||
+        adapter.value.readyState === WalletReadyState.Loadable
+      )
+    )
+      return;
+    await connect(adapter.value.name);
+
+    // When the adapter changes, disconnect the old one
+    onCleanup(() => {
+      if (adapter.value) adapter.value.disconnect();
+    });
+  });
 
   async function signAndSubmitTransaction(transaction: TransactionPayload, option?: any) {
     if (!adapter.value) throw handleError(new WalletNotSelectedError());
