@@ -8,6 +8,7 @@
 
     <p>Connected: {{ connected }}</p>
     <p>Connecting: {{ connecting }}</p>
+    <p>Address: {{ address }}</p>
   </div>
 </template>
 
@@ -101,6 +102,7 @@ export default defineComponent({
       onSign,
       connected,
       connecting,
+      address,
     };
   },
 });
