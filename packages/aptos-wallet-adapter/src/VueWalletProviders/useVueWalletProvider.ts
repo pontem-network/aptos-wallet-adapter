@@ -1,5 +1,7 @@
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { defineStore } from 'pinia';
+import { TransactionPayload } from 'aptos/src/generated';
+
 import {
   Wallet,
   WalletError,
@@ -7,9 +9,13 @@ import {
   WalletNotReadyError,
   WalletNotSelectedError
 } from '../WalletProviders';
-import { AccountKeys, WalletAdapter, WalletName, WalletReadyState } from '../WalletAdapters';
-import { useLocalStorage } from './hooks/useLocalStorage';
-import { TransactionPayload } from 'aptos/src/generated';
+import {
+  AccountKeys,
+  SignMessagePayload,
+  WalletAdapter,
+  WalletName,
+  WalletReadyState
+} from '../WalletAdapters';
 
 interface IUseVueWalletProvider {
   wallets: WalletAdapter[];
@@ -18,12 +24,25 @@ interface IUseVueWalletProvider {
   autoConnect: boolean;
 }
 
+const getWalletNameFromLocalStorage = (key: string) => {
+  try {
+    const value = localStorage.getItem(key);
+    if (value) return JSON.parse(value);
+  } catch (e: any) {
+    if (typeof window !== 'undefined') {
+      console.error(e);
+    }
+  }
+  return null;
+};
+
 export const useWalletProviderStore = defineStore('walletProviderStore', () => {
   const adapters = ref<WalletAdapter[]>([]);
   const localStorageKey = ref<string>('walletName');
   const autoConnect = ref<boolean>(false);
   const onError = ref<((error: WalletError) => void) | undefined>(undefined);
 
+  // init method which developer should call from Vue component to init store with wallets and parameters
   function init({
     wallets = [],
     onError: onHandleError,
@@ -34,12 +53,9 @@ export const useWalletProviderStore = defineStore('walletProviderStore', () => {
     if (lsKey) localStorageKey.value = lsKey;
     if (autoConnection !== undefined) autoConnect.value = autoConnection;
     if (onError) onError.value = onHandleError;
-
-    console.log('inited, adapters.value: ', adapters.value);
   }
 
-  const useLocalStorageState = useLocalStorage();
-  const [, setWalletName] = useLocalStorageState<WalletName | null>(localStorageKey.value, null);
+  const walletName = ref<WalletName | null>(null);
   const wallet = ref<Wallet | null>(null);
   const adapter = ref<WalletAdapter | null>(null);
   const account = ref<AccountKeys | null>(null);
@@ -47,6 +63,7 @@ export const useWalletProviderStore = defineStore('walletProviderStore', () => {
   const connecting = ref<boolean>(false);
   const disconnecting = ref<boolean>(false);
   const isUnloading = ref<boolean>(false);
+  const readyState = computed(() => adapter.value?.readyState || WalletReadyState.Unsupported);
 
   // Wrap adapters to conform to the `Wallet` interface
   const wallets = ref<Wallet[]>([]);
@@ -59,7 +76,7 @@ export const useWalletProviderStore = defineStore('walletProviderStore', () => {
     connected.value = false;
   }
 
-  // When the wallets change, start to listen >for changes to their `readyState`
+  // When the wallets change, start listen for changes to their `readyState`
   watch(adapters, (_value, _oldValue, onCleanup) => {
     function handleReadyStateChange(this: WalletAdapter, isReadyState: WalletReadyState) {
       wallets.value = wallets.value.map((prevWallet) => {
@@ -84,6 +101,28 @@ export const useWalletProviderStore = defineStore('walletProviderStore', () => {
     });
   });
 
+  // autoConnect adapter if localStorage not empty
+  watch([autoConnect, localStorageKey], () => {
+    walletName.value = getWalletNameFromLocalStorage(localStorageKey.value);
+  });
+
+  // set or reset current wallet from localstorage
+  function setWalletName(name: WalletName | null) {
+    try {
+      if (name === null) {
+        localStorage.removeItem(localStorageKey.value);
+        walletName.value = null;
+      } else {
+        localStorage.setItem(localStorageKey.value, JSON.stringify(name));
+        walletName.value = name;
+      }
+    } catch (e: any) {
+      if (typeof window !== 'undefined') {
+        console.error(e);
+      }
+    }
+  }
+
   //Handle the adapter's connect event
   function handleConnect() {
     if (!adapter.value) return;
@@ -103,11 +142,12 @@ export const useWalletProviderStore = defineStore('walletProviderStore', () => {
     return error;
   }
 
-  async function connect(walletName: string) {
+  // function to connect adapter
+  async function connect() {
     if (connecting.value || disconnecting.value || connected.value) return;
-    const selectedWallet = wallets.value.find((wAdapter) => wAdapter.adapter.name === walletName);
-
-    console.log('wallets inside connect', wallets.value);
+    const selectedWallet = wallets.value.find(
+      (wAdapter) => wAdapter.adapter.name === walletName.value
+    );
     if (selectedWallet) {
       wallet.value = selectedWallet;
       adapter.value = selectedWallet.adapter;
@@ -148,6 +188,7 @@ export const useWalletProviderStore = defineStore('walletProviderStore', () => {
     }
   }
 
+  // function to disconnect adapter and clear localstorage
   async function disconnect() {
     if (disconnecting.value) return;
     if (!adapter.value) {
@@ -170,45 +211,47 @@ export const useWalletProviderStore = defineStore('walletProviderStore', () => {
   }
 
   // If autoConnect is enabled, try to connect when the adapter changes and is ready
-  watch(adapter, async (_oldValue, _newValue, onCleanup) => {
+  watch([walletName, adapter, connecting, connected, readyState], () => {
     if (
       connecting.value ||
       connected.value ||
+      !walletName.value ||
       !autoConnect.value ||
-      !adapter.value ||
-      !(
-        adapter.value.readyState === WalletReadyState.Installed ||
-        adapter.value.readyState === WalletReadyState.Loadable
-      )
-    )
+      !(readyState.value === WalletReadyState.Installed || WalletReadyState.Loadable)
+    ) {
       return;
-    await connect(adapter.value.name);
+    }
 
-    // When the adapter changes, disconnect the old one
-    onCleanup(() => {
-      if (adapter.value) adapter.value.disconnect();
-    });
+    (async function () {
+      try {
+        await connect();
+      } catch (error: any) {
+        setWalletName(null);
+      }
+    })();
   });
 
   async function signAndSubmitTransaction(transaction: TransactionPayload, option?: any) {
     if (!adapter.value) throw handleError(new WalletNotSelectedError());
     if (!connected.value) throw handleError(new WalletNotConnectedError());
-    return adapter.value.signAndSubmitTransaction(transaction, option);
+    const response = await adapter.value.signAndSubmitTransaction(transaction, option);
+    return response;
   }
 
   async function signTransaction(transaction: TransactionPayload, option?: any) {
     if (!adapter.value) throw handleError(new WalletNotSelectedError());
     if (!connected.value) throw handleError(new WalletNotConnectedError());
-    return adapter.value.signTransaction(transaction, option);
+    const response = await adapter.value.signTransaction(transaction, option);
+    return response;
   }
 
-  async function signMessage(message: string) {
+  async function signMessage(msgPayload: string | SignMessagePayload | Uint8Array) {
     if (!adapter.value) throw handleError(new WalletNotSelectedError());
     if (!connected.value) throw handleError(new WalletNotConnectedError());
-    return adapter.value.signMessage(message);
+    const response = await adapter.value.signMessage(msgPayload);
+    return response;
   }
 
-  console.log('current Adapter inside Vue wallet:', adapter.value);
   return {
     init,
     wallets,
