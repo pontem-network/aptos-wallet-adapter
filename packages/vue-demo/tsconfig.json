@@ -11,7 +11,7 @@
     "forceConsistentCasingInFileNames": true,
     "useDefineForClassFields": true,
     "sourceMap": true,
-    "baseUrl": ".",
+    "baseUrl": "./hello-world",
     "types": [
       "webpack-env"
     ],
@@ -35,6 +35,6 @@
     "tests/**/*.tsx"
   ],
   "exclude": [
-    "node_modules",
+    "node_modules"
   ]
 }

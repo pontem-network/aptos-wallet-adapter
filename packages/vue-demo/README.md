@@ -1,6 +1,12 @@
-# hello-world
+# That is a rough example of Vue.js + PontemWalletVueAdapter
+ 
+## Firstly, build dist directory at packages/aptos-wallet-adapter:
 
-## Project setup
+```
+cd ../aptos-wallet-adapter && npm run build
+```
+
+## Please consider to use yarn
 ```
 yarn install
 ```
