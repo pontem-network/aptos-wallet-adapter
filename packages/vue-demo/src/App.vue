@@ -12,7 +12,7 @@
       Connect if autoconnection false
     </button>
     <button v-if="connected" @click="onDisconnect">Disconnect</button>
-    <button @click="onSelect">Select and Connect</button>
+    <button v-if="!connected" @click="onSelect">Select and Connect</button>
     <button v-if="connected" @click="onSign">onSign</button>
     <button v-if="connected" @click="onSignAndSubmit">Sign and Submit</button>
     <button v-if="connected" @click="onSignMessage">SignMessage</button>
@@ -83,6 +83,7 @@ export default defineComponent({
     const onDisconnect = async () => {
       try {
         await disconnect();
+        hash.value = null;
       } catch (e) {
         console.log(e);
       }

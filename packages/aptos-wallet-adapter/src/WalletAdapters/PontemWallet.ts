@@ -46,10 +46,8 @@ interface IPontemWallet {
   isConnected(): Promise<boolean>;
   signTransaction(transaction: TransactionPayload, options?: any): Promise<Uint8Array>;
   signMessage(message: SignMessagePayload): Promise<{
-    success: boolean,
-    payload: {
-      result: SignMessageResponse
-    }
+    success: boolean;
+    result: SignMessageResponse;
   }>;
   disconnect(): Promise<void>;
   onAccountChange?(listener: (address: string | undefined) => void): Promise<void>;
@@ -234,7 +232,7 @@ export class PontemWalletAdapter extends BaseWalletAdapter {
       if (!wallet || !provider) throw new WalletNotConnectedError();
       const response = await provider?.signMessage(message);
       if (response.success) {
-        return response.payload.result;
+        return response.result;
       } else {
         throw new Error('Sign Message failed');
       }

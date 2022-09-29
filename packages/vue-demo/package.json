@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "build:adapter": "cd ../aptos-wallet-adapter && npm run build",
+    "rebuild": "rm -rf node_modules && yarn build:adapter && yarn install && yarn serve",
+    "clean": "rm -rf node_modules",
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",
