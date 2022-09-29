@@ -1,19 +1,21 @@
 <template>
   <div class="hello">
     <h1>Welcome to Your Vue.js + TypeScript App</h1>
-    <h3>Select wallet</h3>
-    <div v-for="item in wallets" v-bind:key="item.name">
-      {{ item.name }}
-      <input type="radio" :value="item.name" v-model="walletName" />
+    <div v-if="!connected">
+      <h3>Select wallet</h3>
+      <div v-for="item in wallets" v-bind:key="item.name">
+        {{ item.name }}
+        <input type="radio" :value="item.name" v-model="walletName" />
+      </div>
     </div>
     <button v-if="!autoConnect" @click="onConnect">
       Connect if autoconnection false
     </button>
-    <button @click="onDisconnect">Disconnect</button>
+    <button v-if="connected" @click="onDisconnect">Disconnect</button>
     <button @click="onSelect">Select and Connect</button>
     <button v-if="connected" @click="onSign">onSign</button>
     <button v-if="connected" @click="onSignAndSubmit">Sign and Submit</button>
-    <button v-if="connected" @click="onSignMessage">Sign and Submit</button>
+    <button v-if="connected" @click="onSignMessage">SignMessage</button>
 
     <p>Auto Connect: {{ autoConnect }}</p>
     <p>Connected: {{ connected }}</p>
