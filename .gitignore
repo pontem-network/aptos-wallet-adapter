@@ -17,6 +17,7 @@
 .env.development.local
 .env.test.local
 .env.production.local
+.idea
 
 npm-debug.log*
 yarn-debug.log*
@@ -25,6 +26,3 @@ lerna-debug.log
 
 #firebase
 .firebase
-
-#idea IDE
-.idea
