@@ -1,5 +1,5 @@
 import { FC, ReactNode, useCallback, useEffect, useRef, useState } from 'react';
-import { TransactionPayload } from 'aptos/src/generated';
+import { TransactionPayload } from '../types';
 import {
   WalletError,
   WalletNotConnectedError,

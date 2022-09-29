@@ -17,7 +17,7 @@ import {
   WalletName,
   WalletReadyState
 } from './BaseAdapter';
-import { TransactionPayload, HexEncodedBytes, EntryFunctionPayload } from 'aptos/src/generated';
+import { TransactionPayload, HexEncodedBytes, EntryFunctionPayload } from '../types';
 
 export const FewchaWalletName = 'Fewcha' as WalletName<'Fewcha'>;
 

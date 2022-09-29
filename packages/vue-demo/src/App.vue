@@ -1,18 +1,25 @@
 <template>
   <div class="hello">
     <h1>Welcome to Your Vue.js + TypeScript App</h1>
-    <button @click="onConnect">Connect if autoconnection false</button>
+    <h3>Select wallet</h3>
+    <div v-for="item in wallets" v-bind:key="item.name">
+      {{ item.name }}
+      <input type="radio" :value="item.name" v-model="walletName" />
+    </div>
+    <button v-if="!autoConnect" @click="onConnect">
+      Connect if autoconnection false
+    </button>
     <button @click="onDisconnect">Disconnect</button>
-    <button @click="onSignAndSubmit">onSignAndSubmit</button>
-    <button @click="onSign">onSign</button>
     <button @click="onSelect">Select and Connect</button>
+    <button v-if="connected" @click="onSign">onSign</button>
     <button v-if="connected" @click="onSignAndSubmit">Sign and Submit</button>
+    <button v-if="connected" @click="onSignMessage">Sign and Submit</button>
 
-    <p>Auto Connect: {{ autoConnect }}}</p>
+    <p>Auto Connect: {{ autoConnect }}</p>
     <p>Connected: {{ connected }}</p>
     <p>Connecting: {{ connecting }}</p>
     <p>Address: {{ address }}</p>
-    <p>Current Selected Wallet: {{ name }}</p>
+    <p>Current Selected Wallet: {{ walletName }}</p>
     <p v-if="hash">Hash of transaction: {{ hash }}</p>
   </div>
 </template>
@@ -30,7 +37,7 @@ import {
   PontemWalletAdapter,
 } from "@manahippo/aptos-wallet-adapter";
 
-const defaultWalletName = "Pontem" as WalletName;
+const defaultWalletName = "Pontem" as WalletName<"Pontem">;
 const autoConnect = true;
 
 export default defineComponent({
@@ -45,6 +52,7 @@ export default defineComponent({
       signAndSubmitTransaction,
       signTransaction,
       select,
+      signMessage,
     } = store; // this is methods, they should not break reactivity.
 
     init({
@@ -53,13 +61,13 @@ export default defineComponent({
       autoConnect: autoConnect,
     });
 
-    const { connected, connecting, account, wallet } = storeToRefs(store);
+    const { connected, connecting, account } = storeToRefs(store);
     const address = computed(() => account.value?.address);
-    const name = computed(() => wallet.value?.adapter.name);
     const hash = ref<string | null>(null);
+    const walletName = ref<WalletName>(defaultWalletName);
 
     const onSelect = () => {
-      select(defaultWalletName);
+      select(walletName.value);
     };
 
     const onConnect = async () => {
@@ -108,18 +116,34 @@ export default defineComponent({
         console.log(e);
       }
     };
+
+    const onSignMessage = async () => {
+      const transactionPayload = {
+        message: "some message",
+        nonce: "12323131",
+      };
+      try {
+        const signedMessage = await signMessage(transactionPayload);
+        console.log("signedMessage", signedMessage);
+      } catch (e) {
+        console.log("signedMessage error", e);
+      }
+    };
+
     return {
       onConnect,
       onDisconnect,
       onSignAndSubmit,
       onSign,
+      onSignMessage,
       connected,
       connecting,
       address,
       onSelect,
-      name,
+      walletName,
       hash,
       autoConnect,
+      wallets,
     };
   },
 });

@@ -6,7 +6,8 @@
     "build:adapter": "cd ../aptos-wallet-adapter && npm run build",
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint"
+    "lint": "vue-cli-service lint",
+    "tsc": "tsc"
   },
   "dependencies": {
     "@vueuse/core": "^9.2.0",

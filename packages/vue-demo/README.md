@@ -3,7 +3,7 @@
 ## Firstly, build dist directory at packages/aptos-wallet-adapter:
 
 ```
-cd ../aptos-wallet-adapter && npm run build
+yarn build:adapter
 ```
 
 ## Please consider to use yarn

@@ -1,6 +1,6 @@
-import { computed, ref, watch } from 'vue';
+import { computed, ref, watch, reactive } from 'vue';
 import { defineStore } from 'pinia';
-import { TransactionPayload } from 'aptos/src/generated';
+import { TransactionPayload } from "../types";
 
 import {
   Wallet,
@@ -16,6 +16,7 @@ import {
   WalletName,
   WalletReadyState
 } from '../WalletAdapters';
+
 
 interface IUseVueWalletProvider {
   wallets: WalletAdapter[];
@@ -106,6 +107,21 @@ export const useWalletProviderStore = defineStore('walletProviderStore', () => {
     walletName.value = getWalletNameFromLocalStorage(localStorageKey.value);
   });
 
+  function handleAddressChange() {
+    function handleChange (address: string){
+      if (address) {
+        account.value.address = address
+      }
+    }
+    if (!adapter.value) return;
+    try {
+      if (!adapter.value?.onAccountChange) return;
+      adapter.value.onAccountChange(handleChange);
+    } catch (e) {
+      (onError.value || console.error)(e);
+    }
+  }
+
   // set or reset current wallet from localstorage
   function setWalletName(name: WalletName | null) {
     try {
@@ -128,6 +144,7 @@ export const useWalletProviderStore = defineStore('walletProviderStore', () => {
     if (!adapter.value) return;
     connected.value = adapter.value.connected;
     account.value = adapter.value.publicAccount;
+    handleAddressChange();
   }
 
   // Handle the adapter's disconnect event
@@ -260,8 +277,9 @@ export const useWalletProviderStore = defineStore('walletProviderStore', () => {
     connected,
     connecting,
     disconnecting,
-    connect,
+    autoConnect,
     select: setWalletName,
+    connect,
     disconnect,
     signAndSubmitTransaction,
     signTransaction,

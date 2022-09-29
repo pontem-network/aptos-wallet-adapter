@@ -1,5 +1,5 @@
 import { MaybeHexString } from 'aptos';
-import { TransactionPayload, HexEncodedBytes } from 'aptos/src/generated';
+import { TransactionPayload, HexEncodedBytes } from '../types';
 import {
   WalletDisconnectionError,
   WalletNotConnectedError,
@@ -11,7 +11,7 @@ import {
 import {
   AccountKeys,
   BaseWalletAdapter,
-  scopePollingDetectionStrategy,
+  scopePollingDetectionStrategy, SignMessagePayload, SignMessageResponse,
   WalletName,
   WalletReadyState
 } from './BaseAdapter';
@@ -45,13 +45,14 @@ interface IPontemWallet {
   }>;
   isConnected(): Promise<boolean>;
   signTransaction(transaction: TransactionPayload, options?: any): Promise<Uint8Array>;
-  signMessage(message: string): Promise<{
-    success: boolean;
-    result: {
-      hexString: HexEncodedBytes;
-    };
+  signMessage(message: SignMessagePayload): Promise<{
+    success: boolean,
+    payload: {
+      result: SignMessageResponse
+    }
   }>;
   disconnect(): Promise<void>;
+  onAccountChange?(listener: (address: string | undefined) => void): Promise<void>;
 }
 
 interface PontemWindow extends Window {
@@ -221,23 +222,35 @@ export class PontemWalletAdapter extends BaseWalletAdapter {
       }
       return { hash: response.result.hash };
     } catch (error: any) {
-      this.emit('error', new WalletSignAndSubmitMessageError(error.error.message));
+      this.emit('error', new WalletSignAndSubmitMessageError(error.message));
       throw error;
     }
   }
 
-  async signMessage(message: string): Promise<string> {
+  async signMessage(message: SignMessagePayload): Promise<SignMessageResponse> {
     try {
       const wallet = this._wallet;
       const provider = this._provider || window.pontem;
       if (!wallet || !provider) throw new WalletNotConnectedError();
       const response = await provider?.signMessage(message);
-      console.log('MEMEM>>>', response);
       if (response.success) {
-        return response.result.hexString;
+        return response.payload.result;
       } else {
         throw new Error('Sign Message failed');
       }
+    } catch (error: any) {
+      const errMsg = error.message;
+      this.emit('error', new WalletSignMessageError(errMsg));
+      throw error;
+    }
+  }
+
+  async onAccountChange(listener): Promise<void> {
+    try {
+      const wallet = this._wallet;
+      const provider = this._provider || window.pontem;
+      if (!wallet || !provider) throw new WalletNotConnectedError();
+      await provider?.onAccountChange(listener);
     } catch (error: any) {
       const errMsg = error.message;
       this.emit('error', new WalletSignMessageError(errMsg));
