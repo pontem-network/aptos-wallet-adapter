@@ -69,6 +69,12 @@ export interface WalletAdapterProps<Name extends string = string> {
     message: string | SignMessagePayload | Uint8Array
   ): Promise<string | SignMessageResponse>;
   onAccountChange?(listener: (address: string | undefined) => void): Promise<void>;
+  onNetworkChange?(listener: (network: any) => void): Promise<void>;
+  network?(): Promise<{
+    api: string;
+    chainId: string;
+    name: string;
+  }>;
 }
 
 export type WalletAdapter<Name extends string = string> = WalletAdapterProps<Name> &
@@ -124,8 +130,6 @@ export abstract class BaseWalletAdapter
   abstract signMessage(
     message: string | SignMessagePayload | Uint8Array
   ): Promise<string | SignMessageResponse>;
-
-  // protected abstract onAccountChange(listener: (address: string | undefined) => void): () => void;
 }
 
 export function scopePollingDetectionStrategy(detect: () => boolean): void {

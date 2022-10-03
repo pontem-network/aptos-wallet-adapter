@@ -23,6 +23,7 @@
     <p>Address: {{ address }}</p>
     <p>Current Selected Wallet: {{ walletName }}</p>
     <p v-if="hash">Hash of transaction: {{ hash }}</p>
+    <p v-if="networkName">Current network: {{ networkName }}</p>
   </div>
 </template>
 
@@ -31,6 +32,7 @@ import { defineComponent } from "vue";
 import { storeToRefs } from "pinia";
 import { computed, ref } from "vue";
 import {
+  IPontemNetwork,
   useWalletProviderStore,
   WalletName,
 } from "@manahippo/aptos-wallet-adapter";
@@ -63,10 +65,12 @@ export default defineComponent({
       autoConnect: autoConnect,
     });
 
-    const { connected, connecting, account } = storeToRefs(store);
+    const { connected, connecting, account, network } = storeToRefs(store); // All const's from store should be extracted with storeToRefs:
+
     const address = computed(() => account.value?.address);
     const hash = ref<string | null>(null);
     const walletName = ref<WalletName>(defaultWalletName);
+    const networkName = computed(() => network.value?.name);
 
     const onSelect = () => {
       select(walletName.value);
@@ -139,10 +143,11 @@ export default defineComponent({
       onSignAndSubmit,
       onSign,
       onSignMessage,
+      onSelect,
       connected,
       connecting,
       address,
-      onSelect,
+      networkName,
       walletName,
       hash,
       autoConnect,

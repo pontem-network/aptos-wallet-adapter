@@ -11,7 +11,9 @@ import {
 import {
   AccountKeys,
   BaseWalletAdapter,
-  scopePollingDetectionStrategy, SignMessagePayload, SignMessageResponse,
+  scopePollingDetectionStrategy,
+  SignMessagePayload,
+  SignMessageResponse,
   WalletName,
   WalletReadyState
 } from './BaseAdapter';
@@ -21,6 +23,12 @@ interface ConnectPontemAccount {
   method: string;
   publicKey: MaybeHexString;
   status: number;
+}
+
+export interface IPontemNetwork {
+  api: string;
+  chainId: string;
+  name: string;
 }
 
 interface PontemAccount {
@@ -50,7 +58,13 @@ interface IPontemWallet {
     result: SignMessageResponse;
   }>;
   disconnect(): Promise<void>;
-  onAccountChange?(listener: (address: string | undefined) => void): Promise<void>;
+  network(): Promise<{
+    api: string;
+    chainId: string;
+    name: string;
+  }>;
+  onAccountChange(listener: (address: string | undefined) => void): Promise<void>;
+  onNetworkChange(listener: (network: IPontemNetwork | undefined) => void): Promise<void>;
 }
 
 interface PontemWindow extends Window {
@@ -249,6 +263,35 @@ export class PontemWalletAdapter extends BaseWalletAdapter {
       const provider = this._provider || window.pontem;
       if (!wallet || !provider) throw new WalletNotConnectedError();
       await provider?.onAccountChange(listener);
+    } catch (error: any) {
+      const errMsg = error.message;
+      this.emit('error', new WalletSignMessageError(errMsg));
+      throw error;
+    }
+  }
+
+  async onNetworkChange(listener): Promise<void> {
+    try {
+      const wallet = this._wallet;
+      const provider = this._provider || window.pontem;
+      if (!wallet || !provider) throw new WalletNotConnectedError();
+      await provider?.onNetworkChange(listener);
+    } catch (error: any) {
+      const errMsg = error.message;
+      this.emit('error', new WalletSignMessageError(errMsg));
+      throw error;
+    }
+  }
+
+  async network(): Promise<{ api: string; chainId: string; name: string }> {
+    try {
+      const wallet = this._wallet;
+      const provider = this._provider || window.pontem;
+      if (!wallet || !provider) throw new WalletNotConnectedError();
+      const response = await provider?.network();
+      if (response) {
+        return response;
+      }
     } catch (error: any) {
       const errMsg = error.message;
       this.emit('error', new WalletSignMessageError(errMsg));
