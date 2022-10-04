@@ -239,12 +239,13 @@ export class PontemWalletAdapter extends BaseWalletAdapter {
     }
   }
 
-  async signMessage(message: SignMessagePayload): Promise<SignMessageResponse> {
+  async signMessage(messagePayload: SignMessagePayload): Promise<SignMessageResponse> {
     try {
       const wallet = this._wallet;
       const provider = this._provider || window.pontem;
       if (!wallet || !provider) throw new WalletNotConnectedError();
-      const response = await provider?.signMessage(message);
+
+      const response = await provider?.signMessage(messagePayload);
       if (response.success) {
         return response.result;
       } else {
