@@ -1,29 +1,46 @@
 <template>
   <div class="hello">
     <h1>Welcome to Your Vue.js + TypeScript App</h1>
-    <div v-if="!connected">
+    <div v-if="!connected" className="wallets__group">
       <h3>Select wallet</h3>
-      <div v-for="item in wallets" v-bind:key="item.name">
-        {{ item.name }}
-        <input type="radio" :value="item.name" v-model="walletName" />
+      <div v-for="item in wallets" v-bind:key="item.name" className="wallets">
+        <input
+          type="radio"
+          v-bind:value="item.name"
+          v-model="walletName"
+          v-bind:id="item.name"
+        />
+        <label v-bind:for="item.name">{{ item.name }}</label>
       </div>
     </div>
-    <button v-if="!autoConnect" @click="onConnect">
-      Connect if autoconnection false
-    </button>
-    <button v-if="connected" @click="onDisconnect">Disconnect</button>
-    <button v-if="!connected" @click="onSelect">Select and Connect</button>
-    <button v-if="connected" @click="onSign">onSign</button>
-    <button v-if="connected" @click="onSignAndSubmit">Sign and Submit</button>
-    <button v-if="connected" @click="onSignMessage">SignMessage</button>
 
-    <p>Auto Connect: {{ autoConnect }}</p>
-    <p>Connected: {{ connected }}</p>
-    <p>Connecting: {{ connecting }}</p>
-    <p>Address: {{ address }}</p>
-    <p>Current Selected Wallet: {{ walletName }}</p>
-    <p v-if="hash">Hash of transaction: {{ hash }}</p>
-    <p v-if="networkName">Current network: {{ networkName }}</p>
+    <div className="buttons__group">
+      <button v-if="!autoConnect" v-on:click="onConnect">
+        Connect if autoconnection false
+      </button>
+      <button v-if="connected" v-on:click="onDisconnect">Disconnect</button>
+      <button v-if="!connected" v-on:click="onSelect">
+        Select and Connect
+      </button>
+      <button v-if="connected" v-on:click="onSign">onSign</button>
+      <button v-if="connected" v-on:click="onSignAndSubmit">
+        Sign and Submit
+      </button>
+      <button v-if="connected" v-on:click="onSignMessage">SignMessage</button>
+    </div>
+
+    <div className="info">
+      <p>Auto Connect: {{ autoConnect }}</p>
+      <p>Connected: {{ connected }}</p>
+      <p>Connecting: {{ connecting }}</p>
+      <p>Address: {{ address }}</p>
+      <p>Current Selected Wallet: {{ walletName }}</p>
+      <p v-if="hash">Hash of transaction: {{ hash }}</p>
+      <p v-if="networkName">Current network: {{ networkName }}</p>
+      <p v-if="signedMessageSignature">
+        Signed signature: {{ signedMessageSignature }}
+      </p>
+    </div>
   </div>
 </template>
 
@@ -32,7 +49,12 @@ import { defineComponent } from "vue";
 import { storeToRefs } from "pinia";
 import { computed, ref } from "vue";
 import {
-  IPontemNetwork,
+  AptosWalletAdapter,
+  FewchaWalletAdapter,
+  HippoExtensionWalletAdapter,
+  HyperPayWalletAdapter,
+  RiseWalletAdapter,
+  SpikaWalletAdapter,
   useWalletProviderStore,
   WalletName,
 } from "@manahippo/aptos-wallet-adapter";
@@ -46,9 +68,19 @@ const autoConnect = true;
 
 export default defineComponent({
   name: "App",
-  setup() {
+  setup: function () {
     const store = useWalletProviderStore();
-    const wallets = [new MartianWalletAdapter(), new PontemWalletAdapter()];
+    const wallets = [
+      new HyperPayWalletAdapter(),
+      new HippoExtensionWalletAdapter(),
+      new MartianWalletAdapter(),
+      new AptosWalletAdapter(),
+      new FewchaWalletAdapter(),
+      new PontemWalletAdapter(),
+      new RiseWalletAdapter(),
+      new SpikaWalletAdapter(),
+    ];
+
     const {
       init,
       connect,
@@ -69,8 +101,15 @@ export default defineComponent({
 
     const address = computed(() => account.value?.address);
     const hash = ref<string | null>(null);
-    const walletName = ref<WalletName>(defaultWalletName);
+    const walletName = ref<WalletName | null>(defaultWalletName);
     const networkName = computed(() => network.value?.name);
+    const signedMessageSignature = ref<string | null>(null);
+
+    const setDefault = () => {
+      hash.value = null;
+      walletName.value = null;
+      signedMessageSignature.value = null;
+    };
 
     const onSelect = () => {
       select(walletName.value);
@@ -87,7 +126,7 @@ export default defineComponent({
     const onDisconnect = async () => {
       try {
         await disconnect();
-        hash.value = null;
+        setDefault();
       } catch (e) {
         console.log(e);
       }
@@ -131,6 +170,11 @@ export default defineComponent({
       };
       try {
         const signedMessage = await signMessage(transactionPayload);
+        if (typeof signedMessage === "string") {
+          signedMessageSignature.value = signedMessage;
+        } else if (typeof signedMessage === "object") {
+          signedMessageSignature.value = signedMessage.signature;
+        }
         console.log("signedMessage", signedMessage);
       } catch (e) {
         console.log("signedMessage error", e);
@@ -152,6 +196,7 @@ export default defineComponent({
       hash,
       autoConnect,
       wallets,
+      signedMessageSignature,
     };
   },
 });
@@ -165,5 +210,21 @@ export default defineComponent({
   text-align: center;
   color: #2c3e50;
   margin-top: 60px;
+}
+
+.wallets__group {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.wallets {
+  display: flex;
+  max-width: 125px;
+  width: 100%;
+  align-items: center;
+  justify-content: flex-start;
 }
 </style>
