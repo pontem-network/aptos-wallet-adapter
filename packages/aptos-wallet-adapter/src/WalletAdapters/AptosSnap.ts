@@ -3,7 +3,7 @@ import {
   HexEncodedBytes,
   EntryFunctionPayload,
   PendingTransaction
-} from 'aptos/src/generated';
+} from '../types';
 import {
   WalletDisconnectionError,
   WalletNotConnectedError,
