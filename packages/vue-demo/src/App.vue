@@ -3,7 +3,11 @@
     <h1>Welcome to Your Vue.js + TypeScript App</h1>
     <div v-if="!connected" className="wallets__group">
       <h3>Select wallet</h3>
-      <div v-for="item in wallets" v-bind:key="item.name" className="wallets">
+      <div
+        v-for="item in walletAdapters"
+        v-bind:key="item.name"
+        className="wallets"
+      >
         <input
           type="radio"
           v-bind:value="item.name"
@@ -45,40 +49,31 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
 import { storeToRefs } from "pinia";
-import { computed, ref } from "vue";
+import { computed, ref, defineComponent } from "vue";
 import {
   AptosWalletAdapter,
-  FewchaWalletAdapter,
-  HippoExtensionWalletAdapter,
-  HyperPayWalletAdapter,
-  RiseWalletAdapter,
-  SpikaWalletAdapter,
-  useWalletProviderStore,
-  WalletName,
-} from "@manahippo/aptos-wallet-adapter";
-import {
   MartianWalletAdapter,
   PontemWalletAdapter,
+  useWalletProviderStore,
+  WalletName,
 } from "@manahippo/aptos-wallet-adapter";
 
 const defaultWalletName = "Pontem" as WalletName<"Pontem">;
 const autoConnect = true;
+const handleError = (error: any) => {
+  /* some fancy notify error callback or just console.log handle */
+  console.log(error);
+};
 
 export default defineComponent({
   name: "App",
   setup: function () {
     const store = useWalletProviderStore();
-    const wallets = [
-      new HyperPayWalletAdapter(),
-      new HippoExtensionWalletAdapter(),
+    const walletAdapters = [
+      new PontemWalletAdapter(),
       new MartianWalletAdapter(),
       new AptosWalletAdapter(),
-      new FewchaWalletAdapter(),
-      new PontemWalletAdapter(),
-      new RiseWalletAdapter(),
-      new SpikaWalletAdapter(),
     ];
 
     const {
@@ -92,9 +87,10 @@ export default defineComponent({
     } = store; // this is methods, they should not break reactivity.
 
     init({
-      wallets,
+      wallets: walletAdapters,
       localStorageKey: "VueAdapterLocalStorage",
       autoConnect: autoConnect,
+      onError: handleError,
     });
 
     const { connected, connecting, account, network } = storeToRefs(store); // All const's from store should be extracted with storeToRefs:
@@ -139,8 +135,12 @@ export default defineComponent({
         type: "entry_function_payload" as const,
         type_arguments: ["0x1::aptos_coin::AptosCoin"],
       };
+      const options = {};
       try {
-        const response = await signAndSubmitTransaction(transactionPayload);
+        const response = await signAndSubmitTransaction(
+          transactionPayload,
+          options
+        );
         console.log("transactionHash", response.hash);
         hash.value = response.hash;
       } catch (e) {
@@ -195,7 +195,7 @@ export default defineComponent({
       walletName,
       hash,
       autoConnect,
-      wallets,
+      walletAdapters,
       signedMessageSignature,
     };
   },
