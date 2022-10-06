@@ -194,6 +194,9 @@ export const useWalletProviderStore = defineStore('walletProviderStore', () => {
     const selectedWallet = wallets.value.find(
       (wAdapter) => wAdapter.adapter.name === walletName.value
     );
+
+    if (!selectedWallet?.adapter) throw handleError(new WalletNotSelectedError());
+
     if (selectedWallet) {
       wallet.value = selectedWallet;
       adapter.value = selectedWallet.adapter;
@@ -201,9 +204,8 @@ export const useWalletProviderStore = defineStore('walletProviderStore', () => {
       account.value = selectedWallet.adapter.publicAccount;
     } else {
       setDefaultState();
+      return;
     }
-
-    if (!selectedWallet?.adapter) throw handleError(new WalletNotSelectedError());
 
     if (
       !(
