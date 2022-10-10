@@ -91,8 +91,11 @@ exports.useWalletProviderStore = (0, pinia_1.defineStore)('walletProviderStore',
     function handleAddressChange() {
         var _a;
         function handleChange(address) {
-            if (typeof address === 'string') {
+            if (typeof address === 'string' && account.value !== null) {
                 account.value.address = address;
+            }
+            else if (connected.value && typeof address === 'undefined') {
+                disconnect();
             }
         }
         if (!adapter.value)

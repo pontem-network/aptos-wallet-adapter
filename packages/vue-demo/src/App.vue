@@ -50,7 +50,7 @@
 
 <script lang="ts">
 import { storeToRefs } from "pinia";
-import { computed, ref, defineComponent } from "vue";
+import { computed, ref, defineComponent, watch } from "vue";
 import {
   AptosWalletAdapter,
   MartianWalletAdapter,
@@ -59,7 +59,6 @@ import {
   WalletName,
 } from "@manahippo/aptos-wallet-adapter";
 
-const defaultWalletName = "Pontem" as WalletName<"Pontem">;
 const autoConnect = true;
 const handleError = (error: any) => {
   /* some fancy notify error callback or just console.log handle */
@@ -93,13 +92,20 @@ export default defineComponent({
       onError: handleError,
     });
 
-    const { connected, connecting, account, network } = storeToRefs(store); // All const's from store should be extracted with storeToRefs:
+    const { connected, connecting, account, network, wallet } =
+      storeToRefs(store); // All const's from store should be extracted with storeToRefs:
 
     const address = computed(() => account.value?.address);
     const hash = ref<string | null>(null);
-    const walletName = ref<WalletName | null>(defaultWalletName);
+    const walletName = ref<WalletName | null>(null);
     const networkName = computed(() => network.value?.name);
     const signedMessageSignature = ref<string | null>(null);
+
+    watch(wallet, () => {
+      if (wallet.value?.adapter.name) {
+        walletName.value = wallet.value.adapter.name;
+      }
+    });
 
     const setDefault = () => {
       hash.value = null;
@@ -135,7 +141,11 @@ export default defineComponent({
         type: "entry_function_payload" as const,
         type_arguments: ["0x1::aptos_coin::AptosCoin"],
       };
-      const options = {};
+      const options = {
+        max_gas_amount: "1000",
+        gas_unit_price: "100",
+        expiration_timestamp_secs: new Date().getTime().toString(),
+      };
       try {
         const response = await signAndSubmitTransaction(
           transactionPayload,

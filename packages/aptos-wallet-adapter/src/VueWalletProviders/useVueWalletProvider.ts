@@ -108,8 +108,10 @@ export const useWalletProviderStore = defineStore('walletProviderStore', () => {
 
   function handleAddressChange() {
     function handleChange(address: string | undefined) {
-      if (typeof address === 'string') {
+      if (typeof address === 'string' && account.value !== null) {
         account.value.address = address;
+      } else if (connected.value && typeof address === 'undefined') {
+        disconnect();
       }
     }
     if (!adapter.value) return;
