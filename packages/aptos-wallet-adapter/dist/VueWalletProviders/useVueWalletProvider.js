@@ -127,7 +127,6 @@ exports.useWalletProviderStore = (0, pinia_1.defineStore)('walletProviderStore',
     }
     // Handle the adapter's disconnect event
     function handleDisconnect() {
-        console.log('handleDisconnect here');
         setWalletName(null);
         if (!adapter.value)
             return;
@@ -165,7 +164,6 @@ exports.useWalletProviderStore = (0, pinia_1.defineStore)('walletProviderStore',
                 selectedWallet.adapter.readyState === WalletAdapters_1.WalletReadyState.Loadable)) {
                 // Clear the selected wallet
                 setWalletName(null);
-                console.log('connect before open pontem');
                 if (typeof window !== 'undefined' && selectedWallet.adapter.url) {
                     window.open(selectedWallet.adapter.url, '_blank');
                 }
@@ -221,12 +219,10 @@ exports.useWalletProviderStore = (0, pinia_1.defineStore)('walletProviderStore',
     });
     // autoConnect adapter if localStorage not empty
     (0, vue_1.watch)([autoConnect, localStorageKey, walletName], () => {
-        console.log('watch there calls getWalletNameFromLocalStorage');
         walletName.value = getWalletNameFromLocalStorage(localStorageKey.value);
     });
     // If autoConnect is enabled, try to connect when the adapter changes and is ready
     (0, vue_1.watch)([walletName, adapter, connecting, connected, readyState, autoConnect], () => {
-        console.log('readyState.value', readyState.value);
         if (connecting.value ||
             connected.value ||
             !walletName.value ||
@@ -234,7 +230,6 @@ exports.useWalletProviderStore = (0, pinia_1.defineStore)('walletProviderStore',
             readyState.value === WalletAdapters_1.WalletReadyState.Unsupported) {
             return;
         }
-        console.log('connect inside watcher');
         (function () {
             return __awaiter(this, void 0, void 0, function* () {
                 try {
