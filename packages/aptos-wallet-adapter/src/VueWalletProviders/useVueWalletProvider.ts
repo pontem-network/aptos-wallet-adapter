@@ -1,6 +1,6 @@
 import { computed, ref, watch } from 'vue';
 import { defineStore } from 'pinia';
-import { TransactionPayload } from '../types';
+import { Types } from 'aptos';
 
 import {
   Wallet,
@@ -51,7 +51,7 @@ export const useWalletProviderStore = defineStore('walletProviderStore', () => {
     adapters.value = wallets;
     if (lsKey) localStorageKey.value = lsKey;
     if (autoConnection !== undefined) autoConnect.value = autoConnection;
-    if (onError) onError.value = onHandleError;
+    if (onError.value) onError.value = onHandleError;
   }
 
   const walletName = ref<WalletName | null>(null);
@@ -107,48 +107,19 @@ export const useWalletProviderStore = defineStore('walletProviderStore', () => {
   });
 
   function handleAddressChange() {
-    function handleChange(address: string | undefined) {
-      if (typeof address === 'string' && account.value !== null) {
-        account.value.address = address;
-      } else if (connected.value && typeof address === 'undefined') {
-        disconnect();
-      }
-    }
     if (!adapter.value) return;
-    try {
-      if (!adapter.value?.onAccountChange) return;
-      adapter.value.onAccountChange(handleChange);
-    } catch (e) {
-      (onError.value || console.error)(e);
+    console.log('adapter: handleAddressChange', adapter.value.publicAccount);
+    if (typeof adapter.value.publicAccount.address === 'string' && account.value !== null) {
+      account.value = adapter.value.publicAccount;
+    } else if (connected.value && typeof adapter.value.publicAccount.address === 'undefined') {
+      disconnect();
     }
   }
 
   function handleNetworkChange() {
-    function handleChange(network: any) {
-      if (network) {
-        walletNetwork.value = network;
-      }
-    }
     if (!adapter.value) return;
-    try {
-      if (!adapter.value?.onNetworkChange) return;
-      adapter.value.onNetworkChange(handleChange);
-    } catch (e) {
-      (onError.value || console.error)(e);
-    }
-  }
-
-  async function getNetwork() {
-    if (adapter.value?.network) {
-      try {
-        const network = await adapter.value.network();
-        if (network) {
-          walletNetwork.value = network;
-        }
-      } catch (e) {
-        (onError.value || console.error)(e);
-      }
-    }
+    console.log('adapter: handleNetworkChange', adapter.value.network);
+    walletNetwork.value = adapter.value.network;
   }
 
   // set or reset current wallet from localstorage
@@ -169,18 +140,18 @@ export const useWalletProviderStore = defineStore('walletProviderStore', () => {
   }
 
   //Handle the adapter's connect event
-  async function handleAfterConnect() {
+  function handleAfterConnect() {
+    console.log('handle after connect', adapter.value);
     if (!adapter.value) return;
-    handleAddressChange();
-    handleNetworkChange();
-    await getNetwork();
-    connected.value = adapter.value.connected;
-    account.value = adapter.value.publicAccount;
+    adapter.value.on('accountChange', handleAddressChange);
+    adapter.value.on('networkChange', handleNetworkChange);
   }
 
   // Handle the adapter's disconnect event
   function handleDisconnect() {
     if (!isUnloading.value) setWalletName(null);
+    adapter.value.off('accountChange', handleAddressChange);
+    adapter.value.off('networkChange', handleNetworkChange);
     setDefaultState();
   }
 
@@ -204,6 +175,7 @@ export const useWalletProviderStore = defineStore('walletProviderStore', () => {
       adapter.value = selectedWallet.adapter;
       connected.value = selectedWallet.adapter.connected;
       account.value = selectedWallet.adapter.publicAccount;
+      walletNetwork.value = selectedWallet.adapter.network;
     } else {
       setDefaultState();
       return;
@@ -227,7 +199,7 @@ export const useWalletProviderStore = defineStore('walletProviderStore', () => {
     connecting.value = true;
     try {
       await selectedWallet.adapter.connect();
-      await handleAfterConnect();
+      handleAfterConnect();
     } catch (error: any) {
       // Clear the selected wallet
       setWalletName(null);
@@ -281,14 +253,14 @@ export const useWalletProviderStore = defineStore('walletProviderStore', () => {
     })();
   });
 
-  async function signAndSubmitTransaction(transaction: TransactionPayload, option?: any) {
+  async function signAndSubmitTransaction(transaction: Types.TransactionPayload, option?: any) {
     if (!adapter.value) throw handleError(new WalletNotSelectedError());
     if (!connected.value) throw handleError(new WalletNotConnectedError());
     const response = await adapter.value.signAndSubmitTransaction(transaction, option);
     return response;
   }
 
-  async function signTransaction(transaction: TransactionPayload, option?: any) {
+  async function signTransaction(transaction: Types.TransactionPayload, option?: any) {
     if (!adapter.value) throw handleError(new WalletNotSelectedError());
     if (!connected.value) throw handleError(new WalletNotConnectedError());
     const response = await adapter.value.signTransaction(transaction, option);

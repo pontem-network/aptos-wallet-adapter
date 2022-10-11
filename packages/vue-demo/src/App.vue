@@ -142,8 +142,8 @@ export default defineComponent({
         type_arguments: ["0x1::aptos_coin::AptosCoin"],
       };
       const options = {
-        max_gas_amount: "1000",
-        gas_unit_price: "100",
+        max_gas_amount: "10000",
+        gas_unit_price: "1000",
         expiration_timestamp_secs: new Date().getTime().toString(),
       };
       try {
