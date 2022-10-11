@@ -57,8 +57,8 @@ interface IPontemWallet {
   }>;
   disconnect(): Promise<void>;
   network(): Promise<NetworkInfo>;
-  onAccountChange(listener: (address: string | undefined) => void): Promise<void>;
-  onNetworkChange(listener: (network: NetworkInfo) => void): Promise<void>;
+  onChangeAccount(listener: (address: string | undefined) => void): Promise<void>;
+  onChangeNetwork(listener: (network: NetworkInfo) => void): Promise<void>;
 }
 
 interface PontemWindow extends Window {
@@ -178,8 +178,8 @@ export class PontemWalletAdapter extends BaseWalletAdapter {
         throw new WalletNotConnectedError('No connect response');
       }
 
-      const walletAccount = await provider?.account();
-      const publicKey = await provider?.publicKey();
+      const walletAccount = response.address;
+      const publicKey = response.publicKey;
       if (walletAccount) {
         this._wallet = {
           address: walletAccount,
@@ -285,10 +285,12 @@ export class PontemWalletAdapter extends BaseWalletAdapter {
       const wallet = this._wallet;
       const provider = this._provider || window.pontem;
       if (!wallet || !provider) throw new WalletNotConnectedError();
-      const handleAccountChange = async (newAccount: string) => {
-        console.log('account Changed >>>', newAccount);
+      const handleAccountChange = async (newAccount: string | undefined) => {
+        if (newAccount === undefined && this.connected) {
+          await this.disconnect();
+          return;
+        }
         const newPublicKey = await provider?.publicKey();
-        console.log('newPublicKey Changed >>>', newPublicKey);
         this._wallet = {
           ...this._wallet,
           address: newAccount,
@@ -296,7 +298,7 @@ export class PontemWalletAdapter extends BaseWalletAdapter {
         };
         this.emit('accountChange', newAccount);
       };
-      await provider?.onAccountChange(handleAccountChange);
+      await provider?.onChangeAccount(handleAccountChange);
     } catch (error: any) {
       const errMsg = error.message;
       this.emit('error', new WalletAccountChangeError(errMsg));
@@ -311,13 +313,12 @@ export class PontemWalletAdapter extends BaseWalletAdapter {
       if (!wallet || !provider) throw new WalletNotConnectedError();
 
       const handleNetworkChange = (network: NetworkInfo) => {
-        console.log('network Changed >>>', network);
         this._network = network.name;
         this._api = network.api;
         this._chainId = network.chainId;
         this.emit('networkChange', this._network);
       };
-      await provider?.onNetworkChange(handleNetworkChange);
+      await provider?.onChangeNetwork(handleNetworkChange);
     } catch (error: any) {
       const errMsg = error.message;
       this.emit('error', new WalletNetworkChangeError(errMsg));

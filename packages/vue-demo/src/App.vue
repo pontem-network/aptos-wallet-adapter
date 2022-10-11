@@ -55,6 +55,7 @@ import {
   AptosWalletAdapter,
   MartianWalletAdapter,
   PontemWalletAdapter,
+  RiseWalletAdapter,
   useWalletProviderStore,
   WalletName,
 } from "@manahippo/aptos-wallet-adapter";
@@ -73,6 +74,7 @@ export default defineComponent({
       new PontemWalletAdapter(),
       new MartianWalletAdapter(),
       new AptosWalletAdapter(),
+      new RiseWalletAdapter(),
     ];
 
     const {
@@ -113,7 +115,7 @@ export default defineComponent({
       signedMessageSignature.value = null;
     };
 
-    const onSelect = () => {
+    const onSelect = async () => {
       select(walletName.value);
     };
 

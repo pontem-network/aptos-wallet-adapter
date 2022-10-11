@@ -31,8 +31,8 @@ interface IPontemWallet {
     }>;
     disconnect(): Promise<void>;
     network(): Promise<NetworkInfo>;
-    onAccountChange(listener: (address: string | undefined) => void): Promise<void>;
-    onNetworkChange(listener: (network: NetworkInfo) => void): Promise<void>;
+    onChangeAccount(listener: (address: string | undefined) => void): Promise<void>;
+    onChangeNetwork(listener: (network: NetworkInfo) => void): Promise<void>;
 }
 export declare const PontemWalletName: WalletName<"Pontem">;
 export interface PontemWalletAdapterConfig {

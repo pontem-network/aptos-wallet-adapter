@@ -61,8 +61,7 @@ export const useWalletProviderStore = defineStore('walletProviderStore', () => {
   const connected = ref<boolean>(false);
   const connecting = ref<boolean>(false);
   const disconnecting = ref<boolean>(false);
-  const isUnloading = ref<boolean>(false);
-  const readyState = computed(() => adapter.value?.readyState || WalletReadyState.Unsupported);
+  const readyState = ref<WalletReadyState>(WalletReadyState.Unsupported);
   const walletNetwork = ref<any>(null);
 
   const wallets = ref<Wallet[]>([]);
@@ -79,12 +78,15 @@ export const useWalletProviderStore = defineStore('walletProviderStore', () => {
   // When the wallets change, start listen for changes to their `readyState`
   watch(adapters, (_value, _oldValue, onCleanup) => {
     function handleReadyStateChange(this: WalletAdapter, isReadyState: WalletReadyState) {
-      wallets.value = wallets.value.map((prevWallet) => {
-        if (prevWallet.adapter.name === this.name) {
-          return { ...prevWallet, isReadyState };
-        }
-        return prevWallet;
-      });
+      const index = wallets.value.findIndex((prevWallet) => prevWallet.adapter.name === this.name);
+      if (index === -1) return wallets.value;
+      const currentWallet = wallets.value[index];
+
+      wallets.value = [
+        ...wallets.value.slice(0, index),
+        { adapter: currentWallet.adapter, readyState: isReadyState },
+        ...wallets.value.slice(index + 1)
+      ];
     }
     wallets.value = adapters.value.map((adpt) => ({
       adapter: adpt,
@@ -101,24 +103,13 @@ export const useWalletProviderStore = defineStore('walletProviderStore', () => {
     });
   });
 
-  // autoConnect adapter if localStorage not empty
-  watch([autoConnect, localStorageKey], () => {
-    walletName.value = getWalletNameFromLocalStorage(localStorageKey.value);
-  });
-
   function handleAddressChange() {
     if (!adapter.value) return;
-    console.log('adapter: handleAddressChange', adapter.value.publicAccount);
-    if (typeof adapter.value.publicAccount.address === 'string' && account.value !== null) {
-      account.value = adapter.value.publicAccount;
-    } else if (connected.value && typeof adapter.value.publicAccount.address === 'undefined') {
-      disconnect();
-    }
+    account.value = adapter.value.publicAccount;
   }
 
   function handleNetworkChange() {
     if (!adapter.value) return;
-    console.log('adapter: handleNetworkChange', adapter.value.network);
     walletNetwork.value = adapter.value.network;
   }
 
@@ -139,25 +130,31 @@ export const useWalletProviderStore = defineStore('walletProviderStore', () => {
     }
   }
 
-  //Handle the adapter's connect event
+  //Handle the adapter's connect event - add network and account listeners.
   function handleAfterConnect() {
-    console.log('handle after connect', adapter.value);
     if (!adapter.value) return;
     adapter.value.on('accountChange', handleAddressChange);
     adapter.value.on('networkChange', handleNetworkChange);
+    adapter.value.on('disconnect', handleDisconnect);
+    adapter.value.on('error', handleError);
+    adapter.value.onAccountChange();
+    adapter.value.onNetworkChange();
   }
 
   // Handle the adapter's disconnect event
   function handleDisconnect() {
-    if (!isUnloading.value) setWalletName(null);
+    setWalletName(null);
+    if (!adapter.value) return;
     adapter.value.off('accountChange', handleAddressChange);
     adapter.value.off('networkChange', handleNetworkChange);
+    adapter.value.off('disconnect', handleDisconnect);
+    adapter.value.off('error', handleError);
     setDefaultState();
   }
 
   // Handle the adapter's error event, and local errors
   function handleError(error: WalletError) {
-    if (!isUnloading.value) (onError.value || console.error)(error);
+    (onError.value || console.error)(error);
     return error;
   }
 
@@ -232,23 +229,35 @@ export const useWalletProviderStore = defineStore('walletProviderStore', () => {
     }
   }
 
+  watch([walletName, wallets, readyState], () => {
+    wallets.value.forEach((item) => {
+      if (walletName.value === item.adapter.name) {
+        readyState.value = item.adapter.readyState;
+      }
+    });
+  });
+
+  // autoConnect adapter if localStorage not empty
+  watch([autoConnect, localStorageKey, walletName], () => {
+    walletName.value = getWalletNameFromLocalStorage(localStorageKey.value);
+  });
+
   // If autoConnect is enabled, try to connect when the adapter changes and is ready
-  watch([walletName, adapter, connecting, connected, readyState], () => {
+  watch([walletName, adapter, connecting, connected, readyState, autoConnect], () => {
     if (
       connecting.value ||
       connected.value ||
       !walletName.value ||
       !autoConnect.value ||
-      !(readyState.value === WalletReadyState.Installed || WalletReadyState.Loadable)
+      readyState.value === WalletReadyState.Unsupported
     ) {
       return;
     }
-
     (async function () {
       try {
         await connect();
       } catch (error: any) {
-        setWalletName(null);
+        handleError(error);
       }
     })();
   });

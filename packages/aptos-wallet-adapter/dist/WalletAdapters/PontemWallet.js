@@ -85,8 +85,8 @@ class PontemWalletAdapter extends BaseAdapter_1.BaseWalletAdapter {
                 if (!response) {
                     throw new errors_1.WalletNotConnectedError('No connect response');
                 }
-                const walletAccount = yield (provider === null || provider === void 0 ? void 0 : provider.account());
-                const publicKey = yield (provider === null || provider === void 0 ? void 0 : provider.publicKey());
+                const walletAccount = response.address;
+                const publicKey = response.publicKey;
                 if (walletAccount) {
                     this._wallet = {
                         address: walletAccount,
@@ -197,13 +197,15 @@ class PontemWalletAdapter extends BaseAdapter_1.BaseWalletAdapter {
                 if (!wallet || !provider)
                     throw new errors_1.WalletNotConnectedError();
                 const handleAccountChange = (newAccount) => __awaiter(this, void 0, void 0, function* () {
-                    console.log('account Changed >>>', newAccount);
+                    if (newAccount === undefined && this.connected) {
+                        yield this.disconnect();
+                        return;
+                    }
                     const newPublicKey = yield (provider === null || provider === void 0 ? void 0 : provider.publicKey());
-                    console.log('newPublicKey Changed >>>', newPublicKey);
                     this._wallet = Object.assign(Object.assign({}, this._wallet), { address: newAccount, publicKey: newPublicKey });
                     this.emit('accountChange', newAccount);
                 });
-                yield (provider === null || provider === void 0 ? void 0 : provider.onAccountChange(handleAccountChange));
+                yield (provider === null || provider === void 0 ? void 0 : provider.onChangeAccount(handleAccountChange));
             }
             catch (error) {
                 const errMsg = error.message;
@@ -220,13 +222,12 @@ class PontemWalletAdapter extends BaseAdapter_1.BaseWalletAdapter {
                 if (!wallet || !provider)
                     throw new errors_1.WalletNotConnectedError();
                 const handleNetworkChange = (network) => {
-                    console.log('network Changed >>>', network);
                     this._network = network.name;
                     this._api = network.api;
                     this._chainId = network.chainId;
                     this.emit('networkChange', this._network);
                 };
-                yield (provider === null || provider === void 0 ? void 0 : provider.onNetworkChange(handleNetworkChange));
+                yield (provider === null || provider === void 0 ? void 0 : provider.onChangeNetwork(handleNetworkChange));
             }
             catch (error) {
                 const errMsg = error.message;

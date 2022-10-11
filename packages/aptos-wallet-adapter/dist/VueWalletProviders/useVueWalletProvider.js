@@ -48,8 +48,7 @@ exports.useWalletProviderStore = (0, pinia_1.defineStore)('walletProviderStore',
     const connected = (0, vue_1.ref)(false);
     const connecting = (0, vue_1.ref)(false);
     const disconnecting = (0, vue_1.ref)(false);
-    const isUnloading = (0, vue_1.ref)(false);
-    const readyState = (0, vue_1.computed)(() => { var _a; return ((_a = adapter.value) === null || _a === void 0 ? void 0 : _a.readyState) || WalletAdapters_1.WalletReadyState.Unsupported; });
+    const readyState = (0, vue_1.ref)(WalletAdapters_1.WalletReadyState.Unsupported);
     const walletNetwork = (0, vue_1.ref)(null);
     const wallets = (0, vue_1.ref)([]);
     // Setting default state to yours
@@ -63,12 +62,15 @@ exports.useWalletProviderStore = (0, pinia_1.defineStore)('walletProviderStore',
     // When the wallets change, start listen for changes to their `readyState`
     (0, vue_1.watch)(adapters, (_value, _oldValue, onCleanup) => {
         function handleReadyStateChange(isReadyState) {
-            wallets.value = wallets.value.map((prevWallet) => {
-                if (prevWallet.adapter.name === this.name) {
-                    return Object.assign(Object.assign({}, prevWallet), { isReadyState });
-                }
-                return prevWallet;
-            });
+            const index = wallets.value.findIndex((prevWallet) => prevWallet.adapter.name === this.name);
+            if (index === -1)
+                return wallets.value;
+            const currentWallet = wallets.value[index];
+            wallets.value = [
+                ...wallets.value.slice(0, index),
+                { adapter: currentWallet.adapter, readyState: isReadyState },
+                ...wallets.value.slice(index + 1)
+            ];
         }
         wallets.value = adapters.value.map((adpt) => ({
             adapter: adpt,
@@ -84,25 +86,14 @@ exports.useWalletProviderStore = (0, pinia_1.defineStore)('walletProviderStore',
             }
         });
     });
-    // autoConnect adapter if localStorage not empty
-    (0, vue_1.watch)([autoConnect, localStorageKey], () => {
-        walletName.value = getWalletNameFromLocalStorage(localStorageKey.value);
-    });
     function handleAddressChange() {
         if (!adapter.value)
             return;
-        console.log('adapter: handleAddressChange', adapter.value.publicAccount);
-        if (typeof adapter.value.publicAccount.address === 'string' && account.value !== null) {
-            account.value = adapter.value.publicAccount;
-        }
-        else if (connected.value && typeof adapter.value.publicAccount.address === 'undefined') {
-            disconnect();
-        }
+        account.value = adapter.value.publicAccount;
     }
     function handleNetworkChange() {
         if (!adapter.value)
             return;
-        console.log('adapter: handleNetworkChange', adapter.value.network);
         walletNetwork.value = adapter.value.network;
     }
     // set or reset current wallet from localstorage
@@ -123,28 +114,32 @@ exports.useWalletProviderStore = (0, pinia_1.defineStore)('walletProviderStore',
             }
         }
     }
-    //Handle the adapter's connect event
+    //Handle the adapter's connect event - add network and account listeners.
     function handleAfterConnect() {
-        console.log('handle after connect', adapter.value);
         if (!adapter.value)
             return;
-        adapter.value.addListener('accountChange', handleAddressChange);
-        adapter.value.addListener('networkChange', handleNetworkChange);
-        // adapter.value.on('accountChange', handleAddressChange);
-        // adapter.value.on('networkChange', handleNetworkChange);
+        adapter.value.on('accountChange', handleAddressChange);
+        adapter.value.on('networkChange', handleNetworkChange);
+        adapter.value.on('disconnect', handleDisconnect);
+        adapter.value.on('error', handleError);
+        adapter.value.onAccountChange();
+        adapter.value.onNetworkChange();
     }
     // Handle the adapter's disconnect event
     function handleDisconnect() {
-        if (!isUnloading.value)
-            setWalletName(null);
+        console.log('handleDisconnect here');
+        setWalletName(null);
+        if (!adapter.value)
+            return;
         adapter.value.off('accountChange', handleAddressChange);
         adapter.value.off('networkChange', handleNetworkChange);
+        adapter.value.off('disconnect', handleDisconnect);
+        adapter.value.off('error', handleError);
         setDefaultState();
     }
     // Handle the adapter's error event, and local errors
     function handleError(error) {
-        if (!isUnloading.value)
-            (onError.value || console.error)(error);
+        (onError.value || console.error)(error);
         return error;
     }
     // function to connect adapter
@@ -170,6 +165,7 @@ exports.useWalletProviderStore = (0, pinia_1.defineStore)('walletProviderStore',
                 selectedWallet.adapter.readyState === WalletAdapters_1.WalletReadyState.Loadable)) {
                 // Clear the selected wallet
                 setWalletName(null);
+                console.log('connect before open pontem');
                 if (typeof window !== 'undefined' && selectedWallet.adapter.url) {
                     window.open(selectedWallet.adapter.url, '_blank');
                 }
@@ -216,22 +212,36 @@ exports.useWalletProviderStore = (0, pinia_1.defineStore)('walletProviderStore',
             }
         });
     }
+    (0, vue_1.watch)([walletName, wallets, readyState], () => {
+        wallets.value.forEach((item) => {
+            if (walletName.value === item.adapter.name) {
+                readyState.value = item.adapter.readyState;
+            }
+        });
+    });
+    // autoConnect adapter if localStorage not empty
+    (0, vue_1.watch)([autoConnect, localStorageKey, walletName], () => {
+        console.log('watch there calls getWalletNameFromLocalStorage');
+        walletName.value = getWalletNameFromLocalStorage(localStorageKey.value);
+    });
     // If autoConnect is enabled, try to connect when the adapter changes and is ready
-    (0, vue_1.watch)([walletName, adapter, connecting, connected, readyState], () => {
+    (0, vue_1.watch)([walletName, adapter, connecting, connected, readyState, autoConnect], () => {
+        console.log('readyState.value', readyState.value);
         if (connecting.value ||
             connected.value ||
             !walletName.value ||
             !autoConnect.value ||
-            !(readyState.value === WalletAdapters_1.WalletReadyState.Installed || WalletAdapters_1.WalletReadyState.Loadable)) {
+            readyState.value === WalletAdapters_1.WalletReadyState.Unsupported) {
             return;
         }
+        console.log('connect inside watcher');
         (function () {
             return __awaiter(this, void 0, void 0, function* () {
                 try {
                     yield connect();
                 }
                 catch (error) {
-                    setWalletName(null);
+                    handleError(error);
                 }
             });
         })();
