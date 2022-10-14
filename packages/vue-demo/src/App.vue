@@ -34,16 +34,19 @@
     </div>
 
     <div className="info">
+      <p>Current Selected Wallet: {{ walletName }}</p>
       <p>Auto Connect: {{ autoConnect }}</p>
       <p>Connected: {{ connected }}</p>
       <p>Connecting: {{ connecting }}</p>
-      <p>Address: {{ address }}</p>
-      <p>Current Selected Wallet: {{ walletName }}</p>
-      <p v-if="hash">Hash of transaction: {{ hash }}</p>
+      <p v-if="address">Address: {{ address }}</p>
+      <p v-if="publicKey">Public Key: {{ publicKey }}</p>
       <p v-if="networkName">Current network: {{ networkName }}</p>
+      <p v-if="chainId">Chain ID: {{ chainId }}</p>
+      <br />
       <p v-if="signedMessageSignature">
         Signed signature: {{ signedMessageSignature }}
       </p>
+      <p v-if="hash">Hash of transaction: {{ hash }}</p>
     </div>
   </div>
 </template>
@@ -98,14 +101,18 @@ export default defineComponent({
       storeToRefs(store); // All const's from store should be extracted with storeToRefs:
 
     const address = computed(() => account.value?.address);
+    const publicKey = computed(() => account.value?.publicKey);
     const hash = ref<string | null>(null);
     const walletName = ref<WalletName | null>(null);
     const networkName = computed(() => network.value?.name);
+    const chainId = computed(() => network.value?.chainId);
     const signedMessageSignature = ref<string | null>(null);
 
-    watch(wallet, () => {
+    watch([wallet, connected], () => {
       if (wallet.value?.adapter.name) {
         walletName.value = wallet.value.adapter.name;
+      } else if (!connected.value) {
+        setDefault();
       }
     });
 
@@ -205,6 +212,8 @@ export default defineComponent({
       address,
       networkName,
       walletName,
+      publicKey,
+      chainId,
       hash,
       autoConnect,
       walletAdapters,
