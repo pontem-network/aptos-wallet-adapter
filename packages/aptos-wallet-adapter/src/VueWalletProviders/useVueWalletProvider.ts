@@ -74,7 +74,6 @@ export const useWalletProviderStore = defineStore('walletProviderStore', () => {
     account.value = null;
     connected.value = false;
     walletNetwork.value = null;
-    console.log('setDefaultState');
   }
 
   // When the wallets change, start listen for changes to their `readyState`

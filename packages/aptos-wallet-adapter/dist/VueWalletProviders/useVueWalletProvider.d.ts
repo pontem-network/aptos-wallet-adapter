@@ -24,7 +24,13 @@ export declare const useWalletProviderStore: import("pinia").StoreDefinition<"wa
                     toString: () => string;
                     toShortString: () => string;
                     toUint8Array: () => Uint8Array;
-                };
+                } | (string | {
+                    hex: () => string;
+                    noPrefix: () => string;
+                    toString: () => string;
+                    toShortString: () => string;
+                    toUint8Array: () => Uint8Array;
+                })[];
                 address: string | {
                     hex: () => string;
                     noPrefix: () => string;
@@ -39,6 +45,7 @@ export declare const useWalletProviderStore: import("pinia").StoreDefinition<"wa
                     toShortString: () => string;
                     toUint8Array: () => Uint8Array;
                 };
+                minKeysRequired?: number;
             };
             network: {
                 api?: string;
@@ -82,7 +89,13 @@ export declare const useWalletProviderStore: import("pinia").StoreDefinition<"wa
                     toString: () => string;
                     toShortString: () => string;
                     toUint8Array: () => Uint8Array;
-                };
+                } | (string | {
+                    hex: () => string;
+                    noPrefix: () => string;
+                    toString: () => string;
+                    toShortString: () => string;
+                    toUint8Array: () => Uint8Array;
+                })[];
                 address: string | {
                     hex: () => string;
                     noPrefix: () => string;
@@ -97,6 +110,7 @@ export declare const useWalletProviderStore: import("pinia").StoreDefinition<"wa
                     toShortString: () => string;
                     toUint8Array: () => Uint8Array;
                 };
+                minKeysRequired?: number;
             };
             network: {
                 api?: string;
@@ -132,7 +146,13 @@ export declare const useWalletProviderStore: import("pinia").StoreDefinition<"wa
             toString: () => string;
             toShortString: () => string;
             toUint8Array: () => Uint8Array;
-        };
+        } | (string | {
+            hex: () => string;
+            noPrefix: () => string;
+            toString: () => string;
+            toShortString: () => string;
+            toUint8Array: () => Uint8Array;
+        })[];
         address: string | {
             hex: () => string;
             noPrefix: () => string;
@@ -147,6 +167,7 @@ export declare const useWalletProviderStore: import("pinia").StoreDefinition<"wa
             toShortString: () => string;
             toUint8Array: () => Uint8Array;
         };
+        minKeysRequired?: number;
     }>;
     connected: import("vue").Ref<boolean>;
     connecting: import("vue").Ref<boolean>;
@@ -182,7 +203,13 @@ export declare const useWalletProviderStore: import("pinia").StoreDefinition<"wa
                     toString: () => string;
                     toShortString: () => string;
                     toUint8Array: () => Uint8Array;
-                };
+                } | (string | {
+                    hex: () => string;
+                    noPrefix: () => string;
+                    toString: () => string;
+                    toShortString: () => string;
+                    toUint8Array: () => Uint8Array;
+                })[];
                 address: string | {
                     hex: () => string;
                     noPrefix: () => string;
@@ -197,6 +224,7 @@ export declare const useWalletProviderStore: import("pinia").StoreDefinition<"wa
                     toShortString: () => string;
                     toUint8Array: () => Uint8Array;
                 };
+                minKeysRequired?: number;
             };
             network: {
                 api?: string;
@@ -240,7 +268,13 @@ export declare const useWalletProviderStore: import("pinia").StoreDefinition<"wa
                     toString: () => string;
                     toShortString: () => string;
                     toUint8Array: () => Uint8Array;
-                };
+                } | (string | {
+                    hex: () => string;
+                    noPrefix: () => string;
+                    toString: () => string;
+                    toShortString: () => string;
+                    toUint8Array: () => Uint8Array;
+                })[];
                 address: string | {
                     hex: () => string;
                     noPrefix: () => string;
@@ -255,6 +289,7 @@ export declare const useWalletProviderStore: import("pinia").StoreDefinition<"wa
                     toShortString: () => string;
                     toUint8Array: () => Uint8Array;
                 };
+                minKeysRequired?: number;
             };
             network: {
                 api?: string;
@@ -290,7 +325,13 @@ export declare const useWalletProviderStore: import("pinia").StoreDefinition<"wa
             toString: () => string;
             toShortString: () => string;
             toUint8Array: () => Uint8Array;
-        };
+        } | (string | {
+            hex: () => string;
+            noPrefix: () => string;
+            toString: () => string;
+            toShortString: () => string;
+            toUint8Array: () => Uint8Array;
+        })[];
         address: string | {
             hex: () => string;
             noPrefix: () => string;
@@ -305,6 +346,7 @@ export declare const useWalletProviderStore: import("pinia").StoreDefinition<"wa
             toShortString: () => string;
             toUint8Array: () => Uint8Array;
         };
+        minKeysRequired?: number;
     }>;
     connected: import("vue").Ref<boolean>;
     connecting: import("vue").Ref<boolean>;
@@ -340,7 +382,13 @@ export declare const useWalletProviderStore: import("pinia").StoreDefinition<"wa
                     toString: () => string;
                     toShortString: () => string;
                     toUint8Array: () => Uint8Array;
-                };
+                } | (string | {
+                    hex: () => string;
+                    noPrefix: () => string;
+                    toString: () => string;
+                    toShortString: () => string;
+                    toUint8Array: () => Uint8Array;
+                })[];
                 address: string | {
                     hex: () => string;
                     noPrefix: () => string;
@@ -355,6 +403,7 @@ export declare const useWalletProviderStore: import("pinia").StoreDefinition<"wa
                     toShortString: () => string;
                     toUint8Array: () => Uint8Array;
                 };
+                minKeysRequired?: number;
             };
             network: {
                 api?: string;
@@ -398,7 +447,13 @@ export declare const useWalletProviderStore: import("pinia").StoreDefinition<"wa
                     toString: () => string;
                     toShortString: () => string;
                     toUint8Array: () => Uint8Array;
-                };
+                } | (string | {
+                    hex: () => string;
+                    noPrefix: () => string;
+                    toString: () => string;
+                    toShortString: () => string;
+                    toUint8Array: () => Uint8Array;
+                })[];
                 address: string | {
                     hex: () => string;
                     noPrefix: () => string;
@@ -413,6 +468,7 @@ export declare const useWalletProviderStore: import("pinia").StoreDefinition<"wa
                     toShortString: () => string;
                     toUint8Array: () => Uint8Array;
                 };
+                minKeysRequired?: number;
             };
             network: {
                 api?: string;
@@ -448,7 +504,13 @@ export declare const useWalletProviderStore: import("pinia").StoreDefinition<"wa
             toString: () => string;
             toShortString: () => string;
             toUint8Array: () => Uint8Array;
-        };
+        } | (string | {
+            hex: () => string;
+            noPrefix: () => string;
+            toString: () => string;
+            toShortString: () => string;
+            toUint8Array: () => Uint8Array;
+        })[];
         address: string | {
             hex: () => string;
             noPrefix: () => string;
@@ -463,6 +525,7 @@ export declare const useWalletProviderStore: import("pinia").StoreDefinition<"wa
             toShortString: () => string;
             toUint8Array: () => Uint8Array;
         };
+        minKeysRequired?: number;
     }>;
     connected: import("vue").Ref<boolean>;
     connecting: import("vue").Ref<boolean>;
