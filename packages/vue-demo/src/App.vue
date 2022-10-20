@@ -109,10 +109,12 @@ export default defineComponent({
     const name = computed(() => wallet.value?.adapter.name);
     const signedMessageSignature = ref<string | null>(null);
 
-    watch([name, connected], () => {
+    watch([name, account], () => {
+      console.log("watcher");
       if (name.value) {
         walletName.value = name.value;
-      } else if (!connected.value) {
+      }
+      if (!account) {
         setDefault();
       }
     });

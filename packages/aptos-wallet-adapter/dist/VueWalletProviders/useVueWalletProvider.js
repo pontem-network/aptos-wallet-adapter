@@ -58,6 +58,7 @@ exports.useWalletProviderStore = (0, pinia_1.defineStore)('walletProviderStore',
         account.value = null;
         connected.value = false;
         walletNetwork.value = null;
+        console.log('setDefaultState');
     }
     // When the wallets change, start listen for changes to their `readyState`
     (0, vue_1.watch)(adapters, (_value, _oldValue, onCleanup) => {
