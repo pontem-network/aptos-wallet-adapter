@@ -1,6 +1,6 @@
 {
   "name": "@manahippo/aptos-wallet-adapter",
-  "version": "0.4.12",
+  "version": "1.0.6",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "files": [
@@ -26,16 +26,18 @@
     "typescript": "^4.7.4"
   },
   "dependencies": {
-    "@blocto/sdk": "^0.3.0-beta.9",
+    "@blocto/sdk": "^0.3.1",
     "@fewcha/web3": "0.1.32",
     "@keystonehq/aptossnap-adapter": "^0.2.8",
-    "eventemitter3": "^4.0.7",
-    "js-sha3": "^0.8.0"
+    "@openblockhq/dappsdk": "^5.0.2",
+    "eventemitter3": "^4.0.7"
   },
   "optionalDependencies": {
     "react": "^18.X.X || 17.X.X",
     "react-dom": "^18.X.X || 17.X.X",
     "pinia": "2.0.22",
-    "vue": "3.2.40"
+    "vue": "3.2.40",
+    "js-sha3": "^0.8.0",
+    "msafe-wallet": "^1.1.9"
   }
 }

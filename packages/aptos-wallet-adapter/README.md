@@ -16,11 +16,9 @@ Supports:
 - [TokenPocket Wallet](https://tokenpocket.pro)
 - [ONTO Wallet](https://onto.app)
 - [Blocto wallet](https://portto.com/download)
-
-Working on (PR welcome):
-
-- [Nightly wallet](https://chrome.google.com/webstore/detail/nightly/injggoambcadlfkkjcgdfbejanmgfgfm/related?hl=en&authuser=0)
-
+- [Nightly Wallet](https://nightly.app/download)
+- [FoxWallet](https://foxwallet.com)
+- [Spacecy wallet](https://spacecywallet.com/)
 # Installation
 
 with `yarn`
@@ -62,7 +60,11 @@ import {
   FletchWalletAdapter,
   TokenPocketWalletAdapter,
   ONTOWalletAdapter,
-  BloctoWalletAdapter
+  BloctoWalletAdapter,
+  SafePalWalletAdapter,
+  FoxWalletAdapter,
+  CloverWalletAdapter,
+  SpacecyWalletAdapter
 } from '@manahippo/aptos-wallet-adapter';
 
 const wallets = [
@@ -77,7 +79,11 @@ const wallets = [
   new FletchWalletAdapter(),
   new TokenPocketWalletAdapter(),
   new ONTOWalletAdapter(),
-  new BloctoWalletAdapter()
+  new BloctoWalletAdapter({ bloctoAppId:'6d85f56e-5f2e-46cd-b5f2-5cf9695b4d46' }), /** Must provide bloctoAppId **/
+  new SafePalWalletAdapter(),
+  new FoxWalletAdapter(),
+  new CloverWalletAdapter(),
+  new SpacecyWalletAdapter()
 ];
 
 const App: React.FC = () => {
