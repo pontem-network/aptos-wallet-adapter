@@ -1,6 +1,6 @@
 {
   "name": "@manahippo/aptos-wallet-adapter",
-  "version": "1.0.6",
+  "version": "1.0.10",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "files": [
@@ -38,6 +38,6 @@
     "pinia": "2.0.22",
     "vue": "3.2.40",
     "js-sha3": "^0.8.0",
-    "msafe-wallet": "^1.1.9"
+    "msafe-wallet": "~2.1.3"
   }
 }

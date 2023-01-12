@@ -1,3 +1,7 @@
+# Official adapter
+
+Note that Aptos Labs has an official implementation of wallet adapter [here](https://github.com/aptos-labs/aptos-wallet-adapter).
+
 # aptos-wallet-adapter
 
 This is a mono-repo consist of the wallet adapter itself, a simple web app with essential functionalities to demonstrate the implementation of the wallet adapter and an e2e auto integration testers based on puppeteer.
@@ -26,6 +30,7 @@ Supports:
 - [Nightly Wallet](https://nightly.app/download)
 - [OpenBlock Wallet](https://openblock.com)
 - [Spacecy wallet](https://spacecywallet.com/)
+- [MSafe wallet](https://app.m-safe.io)
 
 **Please refer to the readme within aptos-wallet-adapter pacakages**
 
@@ -53,3 +58,4 @@ Automatically testing suites based on puppeteer to run E2E integration tests aga
 | Blocto  | F(cannot test)         | F(cannot test)               |
 | BitKeep | F                      | F                            |
 | Spacecy | T                      | T                            |
+| MSafe   | T(cannot test)         | T(cannot test)               |
