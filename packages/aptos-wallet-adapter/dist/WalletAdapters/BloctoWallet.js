@@ -35,9 +35,7 @@ exports.APTOS_NETWORK_CHAIN_ID_MAPPING = {
     [BaseAdapter_1.WalletAdapterNetwork.Testnet]: 2
 };
 class BloctoWalletAdapter extends BaseAdapter_1.BaseWalletAdapter {
-    constructor({ network, timeout = 10000, bloctoAppId = '' } = {
-        network: BaseAdapter_1.WalletAdapterNetwork.Testnet
-    }) {
+    constructor({ network = BaseAdapter_1.WalletAdapterNetwork.Mainnet, timeout = 10000, bloctoAppId }) {
         super();
         this.name = exports.BloctoWalletName;
         this.url = 'https://portto.com/download';
@@ -161,12 +159,12 @@ class BloctoWalletAdapter extends BaseAdapter_1.BaseWalletAdapter {
             }
         });
     }
-    signAndSubmitTransaction(transaction) {
+    signAndSubmitTransaction(transaction, options) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 try {
                     const provider = this._provider;
-                    const response = yield (provider === null || provider === void 0 ? void 0 : provider.signAndSubmitTransaction(transaction));
+                    const response = yield (provider === null || provider === void 0 ? void 0 : provider.signAndSubmitTransaction(transaction, options));
                     if (response) {
                         return { hash: response.hash };
                     }

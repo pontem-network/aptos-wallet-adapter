@@ -544,6 +544,6 @@ export declare const useWalletProviderStore: import("pinia").StoreDefinition<"wa
     }>;
     signTransaction: (transaction: Types.TransactionPayload, option?: any) => Promise<Uint8Array>;
     signMessage: (msgPayload: string | SignMessagePayload | Uint8Array) => Promise<string | import("../WalletAdapters").SignMessageResponse>;
-}, "select" | "connect" | "disconnect" | "signTransaction" | "signMessage" | "init" | "signAndSubmitTransaction">>;
+}, "select" | "connect" | "disconnect" | "signTransaction" | "signMessage" | "signAndSubmitTransaction" | "init">>;
 export {};
 //# sourceMappingURL=useVueWalletProvider.d.ts.map

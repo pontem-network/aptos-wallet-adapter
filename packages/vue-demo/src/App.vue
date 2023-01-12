@@ -59,8 +59,10 @@ import {
   MartianWalletAdapter,
   PontemWalletAdapter,
   RiseWalletAdapter,
+  MsafeWalletAdapter,
   useWalletProviderStore,
   WalletName,
+  MsafeWalletName,
 } from "@manahippo/aptos-wallet-adapter";
 
 const autoConnect = true;
@@ -72,12 +74,15 @@ const handleError = (error: any) => {
 export default defineComponent({
   name: "App",
   setup: function () {
+    const msafeURL = "https://testnet.m-safe.io/";
+
     const store = useWalletProviderStore();
     const walletAdapters = [
       new PontemWalletAdapter(),
       new MartianWalletAdapter(),
       new AptosWalletAdapter(),
       new RiseWalletAdapter(),
+      new MsafeWalletAdapter(msafeURL),
     ];
 
     const {
@@ -126,6 +131,7 @@ export default defineComponent({
     };
 
     const onSelect = async () => {
+      console.log("walletName: ", walletName.value);
       select(walletName.value);
     };
 

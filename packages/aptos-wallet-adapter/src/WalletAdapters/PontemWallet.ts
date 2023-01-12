@@ -168,10 +168,7 @@ export class PontemWalletAdapter extends BaseWalletAdapter {
       this._connecting = true;
 
       const provider = this._provider || window.pontem;
-      const isConnected = await provider?.isConnected();
-      if (isConnected) {
-        await provider?.disconnect();
-      }
+
       const response = await provider?.connect();
 
       if (!response) {

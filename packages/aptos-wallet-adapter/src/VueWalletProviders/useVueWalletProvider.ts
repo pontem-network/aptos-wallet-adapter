@@ -161,10 +161,12 @@ export const useWalletProviderStore = defineStore('walletProviderStore', () => {
 
   // function to connect adapter
   async function connect() {
+    console.log(1);
     if (connecting.value || disconnecting.value || connected.value) return;
     const selectedWallet = wallets.value.find(
       (wAdapter) => wAdapter.adapter.name === walletName.value
     );
+    console.log(2);
 
     if (!selectedWallet?.adapter) throw handleError(new WalletNotSelectedError());
 
@@ -178,15 +180,20 @@ export const useWalletProviderStore = defineStore('walletProviderStore', () => {
       setDefaultState();
       return;
     }
+    console.log(3);
+
+    console.log("selectedWallet.adapter.name", selectedWallet.adapter.name);
 
     if (
       !(
         selectedWallet.adapter.readyState === WalletReadyState.Installed ||
-        selectedWallet.adapter.readyState === WalletReadyState.Loadable
+        selectedWallet.adapter.readyState === WalletReadyState.Loadable ||
+        selectedWallet.adapter.name === 'Msafe'
       )
     ) {
       // Clear the selected wallet
       setWalletName(null);
+      console.log("readyState: ", selectedWallet.adapter.readyState);
       if (typeof window !== 'undefined' && selectedWallet.adapter.url) {
         window.open(selectedWallet.adapter.url, '_blank');
       }
@@ -194,10 +201,13 @@ export const useWalletProviderStore = defineStore('walletProviderStore', () => {
       throw handleError(new WalletNotReadyError());
     }
 
+    console.log(4);
+
     connecting.value = true;
     try {
       await selectedWallet.adapter.connect();
       handleAfterConnect();
+      console.log(5);
     } catch (error: any) {
       // Clear the selected wallet
       setWalletName(null);
@@ -205,6 +215,7 @@ export const useWalletProviderStore = defineStore('walletProviderStore', () => {
       throw error;
     } finally {
       connecting.value = false;
+      console.log(6);
     }
   }
 
@@ -249,8 +260,7 @@ export const useWalletProviderStore = defineStore('walletProviderStore', () => {
       connecting.value ||
       connected.value ||
       !walletName.value ||
-      !autoConnect.value ||
-      readyState.value === WalletReadyState.Unsupported
+      !autoConnect.value
     ) {
       return;
     }

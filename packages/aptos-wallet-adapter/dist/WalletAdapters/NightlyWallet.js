@@ -81,12 +81,12 @@ class NightlyWalletAdapter extends BaseAdapter_1.BaseWalletAdapter {
         this._readyState = typeof window === 'undefined' || typeof document === 'undefined'
             ? BaseAdapter_1.WalletReadyState.Unsupported
             : BaseAdapter_1.WalletReadyState.NotDetected;
-        this._provider = (_a = window.nightly) === null || _a === void 0 ? void 0 : _a.aptos;
+        this._provider = typeof window !== 'undefined' ? (_a = window.nightly) === null || _a === void 0 ? void 0 : _a.aptos : undefined;
         this._network = undefined;
         this._timeout = timeout;
         this._connecting = false;
         this._wallet = null;
-        if (this._readyState !== BaseAdapter_1.WalletReadyState.Unsupported) {
+        if (typeof window !== 'undefined' && this._readyState !== BaseAdapter_1.WalletReadyState.Unsupported) {
             (0, BaseAdapter_1.scopePollingDetectionStrategy)(() => {
                 var _a;
                 if ((_a = window.nightly) === null || _a === void 0 ? void 0 : _a.aptos) {

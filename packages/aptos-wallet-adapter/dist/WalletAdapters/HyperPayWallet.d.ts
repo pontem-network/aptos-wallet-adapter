@@ -1,5 +1,5 @@
 import { MaybeHexString, Types } from 'aptos';
-import { AccountKeys, BaseWalletAdapter, NetworkInfo, WalletAdapterNetwork, WalletName, WalletReadyState } from './BaseAdapter';
+import { AccountKeys, BaseWalletAdapter, NetworkInfo, WalletAdapterNetwork, WalletName, SignMessageResponse, SignMessagePayload, WalletReadyState } from './BaseAdapter';
 interface ConnectHyperPayAccount {
     address: MaybeHexString;
     method: string;
@@ -16,12 +16,14 @@ interface IHyperPayWallet {
     connect: () => Promise<ConnectHyperPayAccount>;
     account(): Promise<HyperPayAccount>;
     isConnected(): Promise<boolean>;
+    getChainId(): Promise<{
+        chainId: number;
+    }>;
+    network(): Promise<WalletAdapterNetwork>;
     generateTransaction(sender: MaybeHexString, payload: any, options?: any): Promise<any>;
     signAndSubmitTransaction(transaction: Types.TransactionPayload): Promise<Types.HexEncodedBytes>;
     signTransaction(transaction: Types.TransactionPayload): Promise<Uint8Array>;
-    signMessage(message: string): Promise<{
-        signature: string;
-    }>;
+    signMessage(message: SignMessagePayload): Promise<SignMessageResponse>;
     disconnect(): Promise<void>;
 }
 export declare const HyperPayWalletName: WalletName<"HyperPay">;
@@ -53,7 +55,7 @@ export declare class HyperPayWalletAdapter extends BaseWalletAdapter {
     signAndSubmitTransaction(transactionPyld: Types.TransactionPayload, options?: any): Promise<{
         hash: Types.HexEncodedBytes;
     }>;
-    signMessage(message: string): Promise<string>;
+    signMessage(msgPayload: SignMessagePayload): Promise<SignMessageResponse>;
     onAccountChange(): Promise<void>;
     onNetworkChange(): Promise<void>;
 }

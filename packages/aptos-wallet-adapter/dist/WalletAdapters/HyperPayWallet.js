@@ -20,8 +20,8 @@ class HyperPayWalletAdapter extends BaseAdapter_1.BaseWalletAdapter {
     timeout = 10000 } = {}) {
         super();
         this.name = exports.HyperPayWalletName;
-        this.url = 'https://www.hyperpay.tech/';
-        this.icon = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjE1IDEyMTUiPjxwYXRoIGQ9Ik02MDcuNSAwQzk0My4wMTMgMCAxMjE1IDI3MS45ODcgMTIxNSA2MDcuNVM5NDMuMDEzIDEyMTUgNjA3LjUgMTIxNSAwIDk0My4wMTMgMCA2MDcuNSAyNzEuOTg3IDAgNjA3LjUgMHpNMzUxLjY4IDM3MS4zMTVzMy43MDgtNzIuOSA3Ny43Ni03Mi45aDIwNC4xMnMxMTkuNDM3LS4xIDIwNC4xMiA3NS4zM2MwIDAgMTExLjg0MyA5My42MTIgMTE2LjY0IDIzNS43MSAwIDAgMS45NjIgMTE5LjA0NS03Mi45IDIxMS40MSAwIDAtNzcuOTMxIDEyMS41LTI2Mi40NCAxMjEuNUg0NDEuNTlzLTg5LjkxIDExLjA0OS04OS45MS04NS4wNXYtNDg2ek0xMTkuMzQ0IDU1My42NTlzLjkwNi0xNy44MiAxOS4wMDgtMTcuODJoNDkuOXMyOS4yLS4wMjMgNDkuOSAxOC40MTRjMCAwIDI3LjMzOSAyMi44ODMgMjguNTEyIDU3LjYxOCAwIDAgLjQ4IDI5LjEtMTcuODIgNTEuNjc4IDAgMC0xOS4wNSAyOS43LTY0LjE1MiAyOS43aC00My4zN3MtMjEuOTc4IDIuNy0yMS45NzgtMjAuNzl2LTExOC44eiIgZmlsbD0iIzE1N0VGQiIgZmlsbC1ydWxlPSJldmVub2RkIi8+PC9zdmc+';
+        this.url = 'https://www.hyperpay.io/';
+        this.icon = 'https://hyperpay.oss-ap-southeast-1.aliyuncs.com/heperpay/1666601839.png';
         this._readyState = typeof window === 'undefined' || typeof document === 'undefined'
             ? BaseAdapter_1.WalletReadyState.Unsupported
             : BaseAdapter_1.WalletReadyState.NotDetected;
@@ -88,6 +88,19 @@ class HyperPayWalletAdapter extends BaseAdapter_1.BaseWalletAdapter {
                 const walletAccount = yield (provider === null || provider === void 0 ? void 0 : provider.account());
                 if (walletAccount) {
                     this._wallet = Object.assign(Object.assign({}, walletAccount), { isConnected: true });
+                    try {
+                        const name = yield (provider === null || provider === void 0 ? void 0 : provider.network());
+                        const { chainId } = yield (provider === null || provider === void 0 ? void 0 : provider.getChainId());
+                        const api = null;
+                        this._network = name;
+                        this._chainId = chainId.toString();
+                        this._api = api;
+                    }
+                    catch (error) {
+                        const errMsg = error.message;
+                        this.emit('error', new errors_1.WalletGetNetworkError(errMsg));
+                        throw error;
+                    }
                 }
                 this.emit('connect', ((_a = this._wallet) === null || _a === void 0 ? void 0 : _a.address) || '');
             }
@@ -160,16 +173,19 @@ class HyperPayWalletAdapter extends BaseAdapter_1.BaseWalletAdapter {
             }
         });
     }
-    signMessage(message) {
+    signMessage(msgPayload) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const wallet = this._wallet;
                 const provider = this._provider || window.hyperpay;
                 if (!wallet || !provider)
                     throw new errors_1.WalletNotConnectedError();
-                const response = yield (provider === null || provider === void 0 ? void 0 : provider.signMessage(message));
-                if (response === null || response === void 0 ? void 0 : response.signature) {
-                    return response === null || response === void 0 ? void 0 : response.signature;
+                if (typeof msgPayload !== 'object' || !msgPayload.nonce) {
+                    throw new errors_1.WalletSignMessageError('Invalid signMessage Payload');
+                }
+                const response = yield (provider === null || provider === void 0 ? void 0 : provider.signMessage(msgPayload));
+                if (response) {
+                    return response;
                 }
                 else {
                     throw new Error('Sign Message failed');

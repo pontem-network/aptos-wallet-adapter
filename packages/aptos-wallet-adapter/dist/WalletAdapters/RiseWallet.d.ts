@@ -6,10 +6,13 @@ interface RiseAccount {
     authKey: MaybeHexString;
     isConnected: boolean;
 }
+declare type AddressInfo = {
+    address: string;
+    publicKey: string;
+    authKey?: string;
+};
 interface IRiseWallet {
-    connect: () => Promise<{
-        address: string;
-    }>;
+    connect: () => Promise<AddressInfo>;
     account(): Promise<RiseAccount>;
     isConnected: () => Promise<boolean>;
     signAndSubmitTransaction(transaction: any): Promise<{
@@ -19,6 +22,10 @@ interface IRiseWallet {
     signMessage(message: SignMessagePayload): Promise<SignMessageResponse>;
     disconnect(): Promise<void>;
     network(): Promise<NetworkInfo>;
+    on(event: string, listener: () => any): void;
+    off(event: string, listener: () => any): void;
+    onAccountChange: (listener: (newAddress: AddressInfo) => void) => void;
+    onNetworkChange: (listener: (network: NetworkInfo) => void) => void;
 }
 export declare const RiseWalletName: WalletName<"Rise Wallet">;
 export interface RiseWalletAdapterConfig {
@@ -52,6 +59,7 @@ export declare class RiseWalletAdapter extends BaseWalletAdapter {
     signMessage(msgPayload: SignMessagePayload): Promise<SignMessageResponse>;
     onAccountChange(): Promise<void>;
     onNetworkChange(): Promise<void>;
+    private handleDisconnect;
 }
 export {};
 //# sourceMappingURL=RiseWallet.d.ts.map

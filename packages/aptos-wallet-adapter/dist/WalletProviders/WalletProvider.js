@@ -16,6 +16,7 @@ const errors_1 = require("./errors");
 const useLocalStorage_1 = require("../hooks/useLocalStorage");
 const BaseAdapter_1 = require("../WalletAdapters/BaseAdapter");
 const useWallet_1 = require("./useWallet");
+const util_1 = require("../utilities/util");
 const initialState = {
     wallet: null,
     adapter: null,
@@ -23,6 +24,7 @@ const initialState = {
     connected: false,
     network: null
 };
+const TIMEOUT = 90;
 const WalletProvider = ({ children, wallets: adapters, autoConnect = false, onError, localStorageKey = 'walletName' }) => {
     const [name, setName] = (0, useLocalStorage_1.useLocalStorage)(localStorageKey, null);
     const [{ wallet, adapter, account, connected, network }, setState] = (0, react_1.useState)(initialState);
@@ -84,6 +86,7 @@ const WalletProvider = ({ children, wallets: adapters, autoConnect = false, onEr
         }
         window.addEventListener('beforeunload', listener);
         return () => window.removeEventListener('beforeunload', listener);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isUnloading, autoConnect]);
     // Handle the adapter's connect event
     const handleConnect = (0, react_1.useCallback)(() => {
@@ -165,7 +168,7 @@ const WalletProvider = ({ children, wallets: adapters, autoConnect = false, onEr
     }, [adapter]);
     // Connect the adapter to the wallet
     const connect = (0, react_1.useCallback)((walletName) => __awaiter(void 0, void 0, void 0, function* () {
-        if (isConnecting.current || isDisconnecting.current || connected || !walletName)
+        if (isDisconnecting.current || connected || !walletName)
             return;
         let walletToConnect = initialState;
         if (!adapter || walletName !== (adapter === null || adapter === void 0 ? void 0 : adapter.name)) {
@@ -205,13 +208,19 @@ const WalletProvider = ({ children, wallets: adapters, autoConnect = false, onEr
         isConnecting.current = true;
         setConnecting(true);
         try {
-            yield walletToConnect.adapter.connect();
+            const timeout = (0, util_1.timeoutPromise)(TIMEOUT * 1000);
+            yield Promise.race([walletToConnect.adapter.connect(), timeout.promise]);
+            clearTimeout(timeout.timeoutId);
         }
         catch (error) {
             // Clear the selected wallet
             setName(null);
-            // Rethrow the error, and handleError will also be called
-            throw error;
+            if (error === 'timeout') {
+                throw handleError(new errors_1.WalletConnectionError(error));
+            }
+            else {
+                throw error;
+            }
         }
         finally {
             setConnecting(false);
@@ -257,7 +266,14 @@ const WalletProvider = ({ children, wallets: adapters, autoConnect = false, onEr
             throw handleError(new errors_1.WalletNotSelectedError());
         if (!connected)
             throw handleError(new errors_1.WalletNotConnectedError());
-        const response = yield adapter.signAndSubmitTransaction(transaction, option);
+        const timeout = (0, util_1.timeoutPromise)(TIMEOUT * 1000);
+        const response = yield Promise.race([
+            adapter.signAndSubmitTransaction(transaction, option),
+            timeout.promise
+        ]);
+        clearTimeout(timeout.timeoutId);
+        if (!response)
+            throw handleError(new errors_1.WalletSignAndSubmitMessageError('Timeout'));
         return response;
     }), [adapter, handleError, connected]);
     const signTransaction = (0, react_1.useCallback)((transaction, option) => __awaiter(void 0, void 0, void 0, function* () {
@@ -265,14 +281,27 @@ const WalletProvider = ({ children, wallets: adapters, autoConnect = false, onEr
             throw handleError(new errors_1.WalletNotSelectedError());
         if (!connected)
             throw handleError(new errors_1.WalletNotConnectedError());
-        return adapter.signTransaction(transaction, option);
+        const timeout = (0, util_1.timeoutPromise)(TIMEOUT * 1000);
+        const response = yield Promise.race([
+            adapter.signTransaction(transaction, option),
+            timeout.promise
+        ]);
+        clearTimeout(timeout.timeoutId);
+        if (!response)
+            throw handleError(new errors_1.WalletSignTransactionError('Timeout'));
+        return response;
     }), [adapter, handleError, connected]);
     const signMessage = (0, react_1.useCallback)((msgPayload) => __awaiter(void 0, void 0, void 0, function* () {
         if (!adapter)
             throw handleError(new errors_1.WalletNotSelectedError());
         if (!connected)
             throw handleError(new errors_1.WalletNotConnectedError());
-        return adapter.signMessage(msgPayload);
+        const timeout = (0, util_1.timeoutPromise)(TIMEOUT * 1000);
+        const response = yield Promise.race([adapter.signMessage(msgPayload), timeout.promise]);
+        clearTimeout(timeout.timeoutId);
+        if (!response)
+            throw handleError(new errors_1.WalletSignMessageError('Timeout'));
+        return response;
     }), [adapter, handleError, connected]);
     return (
     // @ts-ignore

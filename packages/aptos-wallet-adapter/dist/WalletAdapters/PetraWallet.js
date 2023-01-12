@@ -95,7 +95,7 @@ class AptosWalletAdapter extends BaseAdapter_1.BaseWalletAdapter {
                     this.emit('error', new errors_1.WalletGetNetworkError(errMsg));
                     throw error;
                 }
-                this.emit('connect', this._wallet.publicKey);
+                this.emit('connect', this._wallet.address);
             }
             catch (error) {
                 this.emit('error', error);

@@ -31,4 +31,11 @@ __exportStar(require("./BitkeepWallet"), exports);
 __exportStar(require("./TokenPocketWallet"), exports);
 __exportStar(require("./ONTOWallet"), exports);
 __exportStar(require("./BloctoWallet"), exports);
+__exportStar(require("./Coin98Wallet"), exports);
+__exportStar(require("./SafePalWallet"), exports);
+__exportStar(require("./FoxWallet"), exports);
+__exportStar(require("./MsafeWallet"), exports);
+__exportStar(require("./OpenBlockWallet"), exports);
+__exportStar(require("./CloverWallet"), exports);
+__exportStar(require("./SpacecyWallet"), exports);
 //# sourceMappingURL=index.js.map

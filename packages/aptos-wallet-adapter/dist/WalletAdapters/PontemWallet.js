@@ -77,10 +77,6 @@ class PontemWalletAdapter extends BaseAdapter_1.BaseWalletAdapter {
                     throw new errors_1.WalletNotReadyError();
                 this._connecting = true;
                 const provider = this._provider || window.pontem;
-                const isConnected = yield (provider === null || provider === void 0 ? void 0 : provider.isConnected());
-                if (isConnected) {
-                    yield (provider === null || provider === void 0 ? void 0 : provider.disconnect());
-                }
                 const response = yield (provider === null || provider === void 0 ? void 0 : provider.connect());
                 if (!response) {
                     throw new errors_1.WalletNotConnectedError('No connect response');

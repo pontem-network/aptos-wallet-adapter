@@ -25,6 +25,16 @@ class RiseWalletAdapter extends BaseAdapter_1.BaseWalletAdapter {
         this._readyState = typeof window === 'undefined' || typeof document === 'undefined'
             ? BaseAdapter_1.WalletReadyState.Unsupported
             : BaseAdapter_1.WalletReadyState.NotDetected;
+        this.handleDisconnect = () => {
+            try {
+                const provider = this._provider || window.rise;
+                provider === null || provider === void 0 ? void 0 : provider.off('disconnect', this.handleDisconnect);
+                this._wallet = null;
+            }
+            finally {
+                this.emit('disconnect');
+            }
+        };
         this._provider = typeof window !== 'undefined' ? window.rise : undefined;
         this._network = undefined;
         this._timeout = timeout;
@@ -85,21 +95,18 @@ class RiseWalletAdapter extends BaseAdapter_1.BaseWalletAdapter {
                 if (!response) {
                     throw new WalletProviders_1.WalletNotConnectedError('User has rejected the request');
                 }
-                // TODO - remove this check in the future
-                //  provider.network is still not live and we want smooth transition
-                if (provider === null || provider === void 0 ? void 0 : provider.network) {
-                    try {
-                        const { chainId, api, name } = yield provider.network();
-                        this._network = name;
-                        this._chainId = chainId;
-                        this._api = api;
-                    }
-                    catch (error) {
-                        const errMsg = error.message;
-                        this.emit('error', new WalletProviders_1.WalletGetNetworkError(errMsg));
-                        throw error;
-                    }
+                try {
+                    const { chainId, api, name } = yield provider.network();
+                    this._network = name;
+                    this._chainId = chainId;
+                    this._api = api;
                 }
+                catch (error) {
+                    const errMsg = error.message;
+                    this.emit('error', new WalletProviders_1.WalletGetNetworkError(errMsg));
+                    throw error;
+                }
+                provider === null || provider === void 0 ? void 0 : provider.on('disconnect', this.handleDisconnect);
                 const account = yield (provider === null || provider === void 0 ? void 0 : provider.account());
                 if (account) {
                     const { publicKey, address, authKey } = account;
@@ -128,6 +135,7 @@ class RiseWalletAdapter extends BaseAdapter_1.BaseWalletAdapter {
                 this._wallet = null;
                 try {
                     const provider = this._provider || window.rise;
+                    provider === null || provider === void 0 ? void 0 : provider.off('disconnect', this.handleDisconnect);
                     yield (provider === null || provider === void 0 ? void 0 : provider.disconnect());
                 }
                 catch (error) {
@@ -207,13 +215,21 @@ class RiseWalletAdapter extends BaseAdapter_1.BaseWalletAdapter {
         });
     }
     onAccountChange() {
+        var _a;
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const wallet = this._wallet;
                 const provider = this._provider || window.rise;
                 if (!wallet || !provider)
                     throw new WalletProviders_1.WalletNotConnectedError();
-                //To be implemented
+                const handleAccountChange = (newAccount) => __awaiter(this, void 0, void 0, function* () {
+                    var _b, _c, _d;
+                    if (newAccount === null || newAccount === void 0 ? void 0 : newAccount.publicKey) {
+                        this._wallet = Object.assign(Object.assign({}, this._wallet), { publicKey: newAccount.publicKey || ((_b = this._wallet) === null || _b === void 0 ? void 0 : _b.publicKey), authKey: newAccount.authKey || ((_c = this._wallet) === null || _c === void 0 ? void 0 : _c.authKey), address: newAccount.address || ((_d = this._wallet) === null || _d === void 0 ? void 0 : _d.address) });
+                        this.emit('accountChange', newAccount === null || newAccount === void 0 ? void 0 : newAccount.publicKey);
+                    }
+                });
+                yield ((_a = provider === null || provider === void 0 ? void 0 : provider.onAccountChange) === null || _a === void 0 ? void 0 : _a.call(provider, handleAccountChange));
             }
             catch (error) {
                 const errMsg = error.message;
@@ -223,13 +239,21 @@ class RiseWalletAdapter extends BaseAdapter_1.BaseWalletAdapter {
         });
     }
     onNetworkChange() {
+        var _a;
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const wallet = this._wallet;
                 const provider = this._provider || window.rise;
                 if (!wallet || !provider)
                     throw new WalletProviders_1.WalletNotConnectedError();
-                //To be implemented
+                const handleNetworkChange = (newNetwork) => __awaiter(this, void 0, void 0, function* () {
+                    const { chainId, api, name } = newNetwork;
+                    this._network = name;
+                    this._chainId = chainId;
+                    this._api = api;
+                    this.emit('networkChange', this._network);
+                });
+                yield ((_a = provider === null || provider === void 0 ? void 0 : provider.onNetworkChange) === null || _a === void 0 ? void 0 : _a.call(provider, handleNetworkChange));
             }
             catch (error) {
                 const errMsg = error.message;

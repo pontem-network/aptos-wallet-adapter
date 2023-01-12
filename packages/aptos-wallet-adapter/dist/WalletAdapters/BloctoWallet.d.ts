@@ -4,9 +4,9 @@ import { AccountKeys, BaseWalletAdapter, WalletName, WalletReadyState, SignMessa
 export declare const BloctoWalletName: WalletName<"Blocto">;
 export interface BloctoWalletAdapterConfig {
     provider?: IBloctoAptos;
-    network: Exclude<WalletAdapterNetwork, WalletAdapterNetwork.Devnet>;
+    network?: Exclude<WalletAdapterNetwork, WalletAdapterNetwork.Devnet>;
     timeout?: number;
-    bloctoAppId?: string;
+    bloctoAppId: string;
 }
 export declare const APTOS_NETWORK_CHAIN_ID_MAPPING: {
     mainnet: number;
@@ -24,7 +24,7 @@ export declare class BloctoWalletAdapter extends BaseWalletAdapter {
     protected _readyState: WalletReadyState;
     protected _connecting: boolean;
     protected _wallet: any | null;
-    constructor({ network, timeout, bloctoAppId }?: BloctoWalletAdapterConfig);
+    constructor({ network, timeout, bloctoAppId }: BloctoWalletAdapterConfig);
     get publicAccount(): AccountKeys;
     get network(): NetworkInfo;
     get connecting(): boolean;
@@ -33,7 +33,7 @@ export declare class BloctoWalletAdapter extends BaseWalletAdapter {
     connect(): Promise<void>;
     disconnect(): Promise<void>;
     signTransaction(transaction: Types.TransactionPayload): Promise<Uint8Array>;
-    signAndSubmitTransaction(transaction: Types.TransactionPayload): Promise<{
+    signAndSubmitTransaction(transaction: Types.TransactionPayload, options?: any): Promise<{
         hash: Types.HexEncodedBytes;
     }>;
     signMessage(message: SignMessagePayload): Promise<SignMessageResponse>;

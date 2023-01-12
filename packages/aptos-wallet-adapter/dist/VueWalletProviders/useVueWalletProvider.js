@@ -58,7 +58,6 @@ exports.useWalletProviderStore = (0, pinia_1.defineStore)('walletProviderStore',
         account.value = null;
         connected.value = false;
         walletNetwork.value = null;
-        console.log('setDefaultState');
     }
     // When the wallets change, start listen for changes to their `readyState`
     (0, vue_1.watch)(adapters, (_value, _oldValue, onCleanup) => {
@@ -145,9 +144,11 @@ exports.useWalletProviderStore = (0, pinia_1.defineStore)('walletProviderStore',
     // function to connect adapter
     function connect() {
         return __awaiter(this, void 0, void 0, function* () {
+            console.log(1);
             if (connecting.value || disconnecting.value || connected.value)
                 return;
             const selectedWallet = wallets.value.find((wAdapter) => wAdapter.adapter.name === walletName.value);
+            console.log(2);
             if (!(selectedWallet === null || selectedWallet === void 0 ? void 0 : selectedWallet.adapter))
                 throw handleError(new WalletProviders_1.WalletNotSelectedError());
             if (selectedWallet) {
@@ -161,19 +162,25 @@ exports.useWalletProviderStore = (0, pinia_1.defineStore)('walletProviderStore',
                 setDefaultState();
                 return;
             }
+            console.log(3);
+            console.log("selectedWallet.adapter.name", selectedWallet.adapter.name);
             if (!(selectedWallet.adapter.readyState === WalletAdapters_1.WalletReadyState.Installed ||
-                selectedWallet.adapter.readyState === WalletAdapters_1.WalletReadyState.Loadable)) {
+                selectedWallet.adapter.readyState === WalletAdapters_1.WalletReadyState.Loadable ||
+                selectedWallet.adapter.name === 'Msafe')) {
                 // Clear the selected wallet
                 setWalletName(null);
+                console.log("readyState: ", selectedWallet.adapter.readyState);
                 if (typeof window !== 'undefined' && selectedWallet.adapter.url) {
                     window.open(selectedWallet.adapter.url, '_blank');
                 }
                 throw handleError(new WalletProviders_1.WalletNotReadyError());
             }
+            console.log(4);
             connecting.value = true;
             try {
                 yield selectedWallet.adapter.connect();
                 handleAfterConnect();
+                console.log(5);
             }
             catch (error) {
                 // Clear the selected wallet
@@ -183,6 +190,7 @@ exports.useWalletProviderStore = (0, pinia_1.defineStore)('walletProviderStore',
             }
             finally {
                 connecting.value = false;
+                console.log(6);
             }
         });
     }
@@ -227,8 +235,7 @@ exports.useWalletProviderStore = (0, pinia_1.defineStore)('walletProviderStore',
         if (connecting.value ||
             connected.value ||
             !walletName.value ||
-            !autoConnect.value ||
-            readyState.value === WalletAdapters_1.WalletReadyState.Unsupported) {
+            !autoConnect.value) {
             return;
         }
         (function () {
