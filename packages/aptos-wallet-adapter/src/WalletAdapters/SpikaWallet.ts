@@ -1,4 +1,5 @@
 import { Types } from 'aptos';
+
 import {
   WalletAccountChangeError,
   WalletDisconnectionError,

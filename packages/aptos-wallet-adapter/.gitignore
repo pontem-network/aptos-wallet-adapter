@@ -9,7 +9,6 @@
 /coverage
 
 # production
-/dist
 
 # misc
 .DS_Store
@@ -24,3 +23,6 @@ yarn-error.log*
 
 #firebase
 .firebase
+
+#idea
+.idea

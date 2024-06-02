@@ -1,6 +1,6 @@
 export const NightlyWallet = () => {};
 
-import { PendingTransaction, TransactionPayload } from 'aptos/src/generated';
+import { Types } from 'aptos';
 import * as SHA3 from 'js-sha3';
 import {
   WalletAccountChangeError,
@@ -61,10 +61,10 @@ interface AptosNightly {
   connect(onDisconnect?: () => void, eagerConnect?: boolean): Promise<AptosPublicKey>;
   disconnect(): Promise<void>;
   signTransaction: (
-    transaction: TransactionPayload,
+    transaction: Types.TransactionPayload,
     submit: boolean
-  ) => Promise<Uint8Array | PendingTransaction>;
-  signAllTransactions: (transaction: TransactionPayload[]) => Promise<Uint8Array[]>;
+  ) => Promise<Uint8Array | Types.PendingTransaction>;
+  signAllTransactions: (transaction: Types.TransactionPayload[]) => Promise<Uint8Array[]>;
   signMessage(msg: string): Promise<Uint8Array>;
   network(): Promise<{ api: string; chainId: number; network: string }>;
 }
@@ -222,7 +222,7 @@ export class NightlyWalletAdapter extends BaseWalletAdapter {
     this.emit('disconnect');
   }
 
-  async signTransaction(payload: TransactionPayload): Promise<Uint8Array> {
+  async signTransaction(payload: Types.TransactionPayload): Promise<Uint8Array> {
     try {
       const wallet = this._wallet;
       if (!wallet) throw new WalletNotConnectedError();
@@ -244,7 +244,7 @@ export class NightlyWalletAdapter extends BaseWalletAdapter {
     }
   }
 
-  async signAllTransaction(payload: TransactionPayload[]): Promise<Uint8Array[]> {
+  async signAllTransaction(payload: Types.TransactionPayload[]): Promise<Uint8Array[]> {
     try {
       const wallet = this._wallet;
       if (!wallet) throw new WalletNotConnectedError();
@@ -266,7 +266,7 @@ export class NightlyWalletAdapter extends BaseWalletAdapter {
     }
   }
 
-  async signAndSubmitTransaction(tx: TransactionPayload): Promise<PendingTransaction> {
+  async signAndSubmitTransaction(tx: Types.TransactionPayload): Promise<Types.PendingTransaction> {
     try {
       const wallet = this._wallet;
       if (!wallet) throw new WalletNotConnectedError();
@@ -275,7 +275,7 @@ export class NightlyWalletAdapter extends BaseWalletAdapter {
         const provider = this._provider || window.nightly?.aptos;
         const response = await provider?.signTransaction(tx, true);
         if (response) {
-          return response as PendingTransaction;
+          return response as Types.PendingTransaction;
         } else {
           throw new Error('Transaction failed');
         }

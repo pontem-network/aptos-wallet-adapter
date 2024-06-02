@@ -4,12 +4,12 @@ React `WalletProvider` supporting loads of aptos wallets.
 
 Supports:
 
+- [Pontem Wallet](https://pontem.network/pontem-wallet)
 - [Aptos official wallet](https://github.com/aptos-labs/aptos-core/releases/tag/wallet-v0.1.1)
 - [Martian wallet](https://martianwallet.xyz/)
 - [Fewcha wallet](https://fewcha.app/)
 - [Hippo wallet](https://github.com/hippospace/hippo-wallet)
 - [Hippo web wallet](https://hippo-wallet-test.web.app/)
-- [Pontem Wallet](https://pontem.network/pontem-wallet)
 - [Spika wallet](https://spika.app)
 - [Rise Wallet](https://risewallet.io/)
 - [Fletch wallet](http://fletchwallet.io/)
@@ -49,12 +49,12 @@ Wallets source code [here](https://github.com/hippospace/aptos-wallet-adapter/tr
 import React from 'react';
 import {
   WalletProvider,
+  PontemWalletAdapter,
   HippoWalletAdapter,
   AptosWalletAdapter,
   HippoExtensionWalletAdapter,
   MartianWalletAdapter,
   FewchaWalletAdapter,
-  PontemWalletAdapter,
   SpikaWalletAdapter,
   RiseWalletAdapter,
   FletchWalletAdapter,
@@ -68,12 +68,12 @@ import {
 } from '@manahippo/aptos-wallet-adapter';
 
 const wallets = [
+  new PontemWalletAdapter(),
   new HippoWalletAdapter(),
   new MartianWalletAdapter(),
   new AptosWalletAdapter(),
   new FewchaWalletAdapter(),
   new HippoExtensionWalletAdapter(),
-  new PontemWalletAdapter(),
   new SpikaWalletAdapter(),
   new RiseWalletAdapter(),
   new FletchWalletAdapter(),

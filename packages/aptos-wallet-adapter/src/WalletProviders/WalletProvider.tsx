@@ -1,4 +1,5 @@
 import { FC, ReactNode, useCallback, useEffect, useRef, useState } from 'react';
+
 import { Types } from 'aptos';
 import {
   WalletConnectionError,
@@ -369,6 +370,7 @@ export const WalletProvider: FC<WalletProviderProps> = ({
   );
 
   return (
+    // @ts-ignore
     <WalletContext.Provider
       value={{
         wallets,

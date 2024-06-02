@@ -11,9 +11,7 @@
     "build": "rm -rf dist; tsc -p tsconfig.json"
   },
   "peerDependencies": {
-    "aptos": "^1.3.16",
-    "react": "^18.X.X || 17.X.X",
-    "react-dom": "^18.X.X || 17.X.X"
+    "aptos": "^1.3.16"
   },
   "devDependencies": {
     "@types/jest": "^27.0.1",
@@ -32,7 +30,13 @@
     "@fewcha/web3": "0.1.32",
     "@keystonehq/aptossnap-adapter": "^0.2.8",
     "@openblockhq/dappsdk": "^5.0.2",
-    "eventemitter3": "^4.0.7",
+    "eventemitter3": "^4.0.7"
+  },
+  "optionalDependencies": {
+    "react": "^18.X.X || 17.X.X",
+    "react-dom": "^18.X.X || 17.X.X",
+    "pinia": "2.0.22",
+    "vue": "3.2.40",
     "js-sha3": "^0.8.0",
     "msafe-wallet": "~2.1.3"
   }
